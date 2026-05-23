@@ -1,0 +1,63 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+lcov.info
+
+# ── Virtual Environment ──
+.venv/
+venv/
+ENV/
+
+# ── Node / Frontend ──
+node_modules/
+.vite/
+dist/
+coverage/
+*.tsbuildinfo
+
+# ── Docker ──
+docker-compose.override.yml
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Environment / Secrets ──
+.env
+.env.local
+.env.production
+!.env.example
+
+# ── Chrome Extension Build ──
+extension/dist/
+
+# ── Learning & Tooling Files ──
+CURRICULUM.md
+THEORY_PROMPT.md
+MENTOR_PROMPT.md
+REVIEW_PROMPT.md
+SKILLS.md
+SCAFFOLD.md
+HANDOFF.md
+CLAUDE.md
+.claude/
