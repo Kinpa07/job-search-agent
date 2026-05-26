@@ -59,6 +59,7 @@ class RemotiveAdapter:
                     )
                     result.append(job_result)
 
+            logger.info("remotive fetch completed", job_count=len(result))
             return result
         except Exception:
             logger.exception("remotive fetch failed")

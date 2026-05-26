@@ -63,6 +63,7 @@ class ArbeitNowAdapter:
                     )
                     result.append(job_result)
 
+            logger.info("arbeitnow fetch completed", job_count=len(result))
             return result
         except Exception:
             logger.exception("arbeitnow fetch failed")
