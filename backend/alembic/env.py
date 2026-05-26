@@ -1,12 +1,13 @@
 import asyncio
-import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from app.config import settings
 from app.database import Base
+from app.models import Job  # noqa: F401 — registers Job to Base.metadata
 
 config = context.config
 
@@ -15,8 +16,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-database_url = os.environ.get("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/jobsearch")
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 
 def run_migrations_offline() -> None:
@@ -38,7 +38,7 @@ def do_run_migrations(connection: object) -> None:
 
 
 async def run_migrations_online() -> None:
-    connectable = create_async_engine(database_url, poolclass=pool.NullPool)
+    connectable = create_async_engine(settings.database_url, poolclass=pool.NullPool)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
