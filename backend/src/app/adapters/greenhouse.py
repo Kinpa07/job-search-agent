@@ -8,7 +8,6 @@ from app.adapters.base import JobFilters, RawJob
 COMPANY_SLUGS = {
     "sumup": "SumUp",
     "ocadogroup": "Ocado Group",
-    "speechify": "Speechify",
     "sofiastars": "Sofia Stars",
     "workboard": "WorkBoard",
     "pointwild": "Point Wild",
