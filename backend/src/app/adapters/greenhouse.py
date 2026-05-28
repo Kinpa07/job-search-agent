@@ -2,6 +2,7 @@
 
 import httpx
 import structlog
+from bs4 import BeautifulSoup
 
 from app.adapters.base import JobFilters, RawJob
 
@@ -61,6 +62,12 @@ class GreenhouseAdapter:
                         ]
 
                     for job in filtered:
+                        content = job.get("content")
+                        description = (
+                            BeautifulSoup(content, "html.parser").get_text(separator=" ", strip=True)
+                            if content
+                            else None
+                        )
                         result.append(
                             RawJob(
                                 title=job["title"],
@@ -68,8 +75,8 @@ class GreenhouseAdapter:
                                 location=job["location"]["name"],
                                 url=job["absolute_url"],
                                 source="greenhouse",
-                                description=None,
-                                raw_html=job["content"],
+                                description=description,
+                                raw_html=None,
                             )
                         )
 
