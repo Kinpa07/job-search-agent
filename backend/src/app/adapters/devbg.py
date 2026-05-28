@@ -131,10 +131,10 @@ class DevBgAdapter:
                     if e.response.status_code == 404:
                         logger.info("devbg last page reached", page=page - 1)
                     else:
-                        logger.exception("devbg fetch failed")
+                        logger.exception("devbg fetch failed", page=page)
                     break
                 except Exception:
-                    logger.exception("devbg fetch failed")
+                    logger.exception("devbg fetch failed", page=page)
                     break
 
         logger.info("devbg fetch completed", job_count=len(result))
