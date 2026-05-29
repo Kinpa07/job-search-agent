@@ -71,10 +71,15 @@ class DevBgAdapter:
                                 continue
                             date_str = date_el.get_text(strip=True)
 
-                            day_str, month_str = date_str.split()
-                            day = int(day_str)
-                            month = BG_MONTHS[month_str]
-                            date = datetime(datetime.now().year, month, day)
+                            try:
+                                day_str, month_str = date_str.split()
+                                day = int(day_str)
+                                month = BG_MONTHS[month_str]
+                                date = datetime(datetime.now().year, month, day)
+                            except (ValueError, KeyError):
+                                logger.warning("devbg unparseable date", date_str=date_str)
+                                continue
+
                             if date > cutoff:
                                 filtered.append(card)
 
