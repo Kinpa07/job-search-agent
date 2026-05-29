@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import httpx
 import structlog
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from app.adapters.base import JobFilters, RawJob
 
@@ -46,7 +46,7 @@ class DevBgAdapter:
                     if not cards:
                         break
 
-                    filtered = cards
+                    filtered: list[Tag] = list(cards)
 
                     if filters.keywords:
                         keywords = [kw.lower() for kw in filters.keywords]

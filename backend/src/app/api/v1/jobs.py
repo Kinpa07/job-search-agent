@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.arbeitnow import ArbeitNowAdapter
 from app.adapters.ashby import AshbyAdapter
-from app.adapters.base import JobFilters, RawJob
+from app.adapters.base import JobFilters, JobSource, RawJob
 from app.adapters.devbg import DevBgAdapter
 from app.adapters.greenhouse import GreenhouseAdapter
 from app.adapters.lever import LeverAdapter
@@ -39,7 +39,7 @@ async def poll_jobs(
     filters = JobFilters(keywords=keywords or [])
     repo = JobRepository(session)
 
-    adapters = [
+    adapters: list[JobSource] = [
         ArbeitNowAdapter(),
         RemotiveAdapter(),
         DevBgAdapter(),

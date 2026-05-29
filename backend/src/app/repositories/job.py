@@ -40,7 +40,7 @@ class JobRepository:
         stmt = insert(Job).values(jobs_list).on_conflict_do_nothing(index_elements=["content_hash"])
         result = await self.session.execute(stmt)
         await self.session.commit()
-        return result.rowcount  # type: ignore[attr-defined]
+        return result.rowcount  # type: ignore[attr-defined, no-any-return]
 
     async def get_jobs(
         self, source: str | None = None, offset: int = 0, limit: int = 100

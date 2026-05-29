@@ -62,7 +62,9 @@ class GreenhouseAdapter:
                     for job in filtered:
                         content = job.get("content")
                         description = (
-                            BeautifulSoup(content, "html.parser").get_text(separator=" ", strip=True)
+                            BeautifulSoup(content, "html.parser").get_text(
+                                separator=" ", strip=True
+                            )
                             if content
                             else None
                         )
