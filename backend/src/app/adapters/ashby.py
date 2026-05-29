@@ -24,7 +24,7 @@ logger = structlog.get_logger()
 class AshbyAdapter:
     async def fetch_jobs(self, filters: JobFilters) -> list[RawJob]:
         result = []
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             for slug, company_name in COMPANY_SLUGS.items():
                 try:
                     response = await client.get(
