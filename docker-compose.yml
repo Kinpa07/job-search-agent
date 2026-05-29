@@ -12,16 +12,17 @@ services:
 
   api:
     build:
-      context: ../backend
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/jobsearch
+      PYTHONPATH: /app/src
     depends_on:
       - db
     volumes:
-      - ../backend:/app
+      - ./backend:/app
     command: uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
