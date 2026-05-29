@@ -15,9 +15,7 @@ COMPANY_SLUGS = {
     "conga": "Conga",
     "bettyjobboard": "Betty",
     "payhawkio": "Payhawk",
-    "draftkings": "DraftKings",
-    "quantive": "Quantive",
-    "skyscanner": "Skyscanner",
+"skyscanner": "Skyscanner",
 }
 
 

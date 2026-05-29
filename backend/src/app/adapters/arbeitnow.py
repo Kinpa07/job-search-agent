@@ -12,7 +12,7 @@ class ArbeitNowAdapter:
     async def fetch_jobs(self, filters: JobFilters) -> list[RawJob]:
         result = []
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(follow_redirects=True) as client:
                 response = await client.get("https://arbeitnow.com/api/job-board-api")
                 response.raise_for_status()
                 data = response.json()["data"]
