@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import structlog
 
-from app.adapters.base import JobFilters, RawJob
+from app.adapters.base import JobFilters, RawJob, title_allowed
 
 COMPANY_SLUGS = {
     "Fliff": "Fliff",
@@ -34,6 +34,10 @@ class LeverAdapter:
                     jobs = response.json()
 
                     filtered = jobs
+
+                    filtered = [
+                        job for job in filtered if title_allowed(job["text"], filters)
+                    ]
 
                     if filters.keywords:
                         keywords = [keyword.lower() for keyword in filters.keywords]

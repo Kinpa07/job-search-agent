@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import httpx
 import structlog
 
-from app.adapters.base import JobFilters, RawJob
+from app.adapters.base import JobFilters, RawJob, title_allowed
 
 logger = structlog.get_logger()
 
@@ -18,6 +18,10 @@ class ArbeitNowAdapter:
                 data = response.json()["data"]
 
                 filtered = data
+
+                filtered = [
+                    job for job in filtered if title_allowed(job["title"], filters)
+                ]
 
                 if filters.keywords:
                     keywords = [keyword.lower() for keyword in filters.keywords]

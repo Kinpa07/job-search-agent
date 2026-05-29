@@ -4,7 +4,7 @@ import httpx
 import structlog
 from bs4 import BeautifulSoup
 
-from app.adapters.base import JobFilters, RawJob
+from app.adapters.base import JobFilters, RawJob, title_allowed
 
 COMPANY_SLUGS = {
     "sumup": "SumUp",
@@ -35,6 +35,10 @@ class GreenhouseAdapter:
                     data = response.json()["jobs"]
 
                     filtered = data
+
+                    filtered = [
+                        job for job in filtered if title_allowed(job["title"], filters)
+                    ]
 
                     if filters.keywords:
                         keywords = [keyword.lower() for keyword in filters.keywords]

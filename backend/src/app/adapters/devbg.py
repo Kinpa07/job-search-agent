@@ -5,7 +5,7 @@ import httpx
 import structlog
 from bs4 import BeautifulSoup, Tag
 
-from app.adapters.base import JobFilters, RawJob
+from app.adapters.base import JobFilters, RawJob, title_allowed
 
 logger = structlog.get_logger()
 
@@ -88,6 +88,8 @@ class DevBgAdapter:
                             continue
 
                         title = title_el.get_text(strip=True)
+                        if not title_allowed(title, filters):
+                            continue
                         company = company_el.get_text(strip=True)
                         url = str(url_el["href"])
                         location_text = (
