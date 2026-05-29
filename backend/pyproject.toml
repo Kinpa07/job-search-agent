@@ -47,6 +47,9 @@ explicit_package_bases = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 pythonpath = ["src"]
+markers = [
+    "integration: tests that require a real Postgres database",
+]
 
 [dependency-groups]
 dev = [
