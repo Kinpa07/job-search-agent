@@ -1,6 +1,7 @@
 import structlog
 from fastapi import FastAPI
 
+from app.api.v1.jobs import router as jobs_router
 from app.config import settings
 
 
@@ -38,6 +39,7 @@ def configure_logging() -> None:
 configure_logging()
 
 app = FastAPI(title="Job Search Agent")
+app.include_router(jobs_router, prefix="/api/v1")
 
 
 @app.get("/health")
