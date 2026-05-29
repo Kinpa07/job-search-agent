@@ -1,3 +1,6 @@
+import time
+
+import structlog
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +16,7 @@ from app.repositories.job import JobRepository
 from app.schemas.job import JobResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+logger = structlog.get_logger()
 
 
 @router.get("/")
@@ -46,8 +50,17 @@ async def poll_jobs(
 
     result: dict[str, int] = {}
     for adapter in adapters:
+        start = time.perf_counter()
         raw_jobs = await adapter.fetch_jobs(filters)
         count = await repo.add_jobs(raw_jobs)
+        elapsed = time.perf_counter() - start
+        logger.info(
+            "adapter polled",
+            source=adapter.source_name(),
+            job_count=len(raw_jobs),
+            new_count=count,
+            elapsed_seconds=round(elapsed, 2),
+        )
         result[adapter.source_name()] = count
 
     return result
