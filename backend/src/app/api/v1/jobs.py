@@ -19,6 +19,7 @@ from app.dependencies import get_redis
 from app.repositories.job import JobRepository
 from app.schemas.job import JobResponse
 from app.schemas.poll_status import PollStatusResponse
+from app.tasks.poll_all_sources import poll_jobs as poll_task
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 logger = structlog.get_logger()
@@ -83,6 +84,12 @@ async def poll_jobs(
             result[source] = -1
 
     return result
+
+
+@router.post("/poll/trigger")
+async def trigger_polling() -> dict[str, str]:
+    result = poll_task.delay()  # type: ignore[attr-defined]
+    return {"task_id": str(result.id)}
 
 
 @router.post("/import")
