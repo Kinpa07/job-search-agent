@@ -1,5 +1,6 @@
 import time
 
+import httpx
 import structlog
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,18 +51,23 @@ async def poll_jobs(
 
     result: dict[str, int] = {}
     for adapter in adapters:
-        start = time.perf_counter()
-        raw_jobs = await adapter.fetch_jobs(filters)
-        count = await repo.add_jobs(raw_jobs)
-        elapsed = time.perf_counter() - start
-        logger.info(
-            "adapter polled",
-            source=adapter.source_name(),
-            job_count=len(raw_jobs),
-            new_count=count,
-            elapsed_seconds=round(elapsed, 2),
-        )
-        result[adapter.source_name()] = count
+        source = adapter.source_name()
+        try:
+            start = time.perf_counter()
+            raw_jobs = await adapter.fetch_jobs(filters)
+            count = await repo.add_jobs(raw_jobs)
+            elapsed = time.perf_counter() - start
+            logger.info(
+                "adapter polled",
+                source=source,
+                job_count=len(raw_jobs),
+                new_count=count,
+                elapsed_seconds=round(elapsed, 2),
+            )
+            result[source] = count
+        except httpx.HTTPError as e:
+            logger.warning("adapter poll failed", source=source, error=str(e))
+            result[source] = -1
 
     return result
 
