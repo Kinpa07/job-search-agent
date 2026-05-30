@@ -1,9 +1,13 @@
+import json
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
+import redis.asyncio as aioredis
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.api.v1.jobs as jobs_module
 from app.adapters import arbeitnow, ashby, devbg, greenhouse, lever, remotive
 from app.adapters.base import JobFilters, RawJob
 from app.repositories.job import JobRepository
@@ -105,3 +109,49 @@ async def test_poll_runs_adapters_and_returns_counts(
 
     stored = (await api_client.get("/api/v1/jobs/")).json()
     assert [j["title"] for j in stored] == ["Junior Developer"]
+
+
+_SAMPLE_LAST_RUN = {
+    "completed_at": "2026-05-30T22:00:00+00:00",
+    "counts": {
+        "arbeitnow": {"job_count": 10, "new_count": 5},
+        "remotive": {"job_count": 3, "new_count": 0},
+    },
+}
+
+
+async def test_poll_status_returns_last_run(
+    api_client: AsyncClient,
+    redis_client: aioredis.Redis,  # type: ignore[type-arg]
+) -> None:
+    await redis_client.set("poll:last_run", json.dumps(_SAMPLE_LAST_RUN))
+
+    response = await api_client.get("/api/v1/jobs/poll/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is not None
+    assert body["counts"]["arbeitnow"]["job_count"] == 10
+    assert body["counts"]["arbeitnow"]["new_count"] == 5
+    assert body["counts"]["remotive"]["new_count"] == 0
+
+
+async def test_poll_status_never_run(api_client: AsyncClient) -> None:
+    response = await api_client.get("/api/v1/jobs/poll/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is None
+    assert body["counts"] == {}
+
+
+async def test_poll_trigger_returns_task_id(
+    api_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fake_result = MagicMock()
+    fake_result.id = "abc-123-task-id"
+    fake_poll_task = MagicMock()
+    fake_poll_task.delay.return_value = fake_result
+    monkeypatch.setattr(jobs_module, "poll_task", fake_poll_task)
+
+    response = await api_client.post("/api/v1/jobs/poll/trigger")
+    assert response.status_code == 200
+    assert response.json()["task_id"] == "abc-123-task-id"
