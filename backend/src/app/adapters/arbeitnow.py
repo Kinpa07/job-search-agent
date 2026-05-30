@@ -19,9 +19,7 @@ class ArbeitNowAdapter:
 
                 filtered = data
 
-                filtered = [
-                    job for job in filtered if title_allowed(job["title"], filters)
-                ]
+                filtered = [job for job in filtered if title_allowed(job["title"], filters)]
 
                 if filters.keywords:
                     keywords = [keyword.lower() for keyword in filters.keywords]
@@ -69,8 +67,13 @@ class ArbeitNowAdapter:
 
             logger.info("arbeitnow fetch completed", job_count=len(result))
             return result
+
+        except httpx.HTTPError as e:
+            logger.warning("arbeitnow network error", error=str(e))
+            raise
+
         except Exception:
-            logger.exception("arbeitnow fetch failed")
+            logger.exception("arbeitnow parse error")
             return []
 
     def source_name(self) -> str:

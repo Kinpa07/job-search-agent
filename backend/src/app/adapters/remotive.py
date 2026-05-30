@@ -19,9 +19,7 @@ class RemotiveAdapter:
 
                 filtered = data
 
-                filtered = [
-                    job for job in filtered if title_allowed(job["title"], filters)
-                ]
+                filtered = [job for job in filtered if title_allowed(job["title"], filters)]
 
                 if filters.keywords:
                     keywords = [keyword.lower() for keyword in filters.keywords]
@@ -65,8 +63,13 @@ class RemotiveAdapter:
 
             logger.info("remotive fetch completed", job_count=len(result))
             return result
+
+        except httpx.HTTPError as e:
+            logger.warning("remotive network error", error=str(e))
+            raise
+
         except Exception:
-            logger.exception("remotive fetch failed")
+            logger.exception("remotive parse error")
             return []
 
     def source_name(self) -> str:

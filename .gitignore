@@ -33,6 +33,11 @@ coverage/
 # ── Docker ──
 docker-compose.override.yml
 
+# ── Celery ──
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat.pid
+
 # ── IDE ──
 .vscode/
 .idea/

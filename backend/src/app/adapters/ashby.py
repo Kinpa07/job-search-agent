@@ -85,9 +85,17 @@ class AshbyAdapter:
                             status=e.response.status_code,
                         )
                     else:
-                        logger.exception("ashby slug fetch failed", slug=slug)
+                        logger.warning(
+                            "ashby slug server error",
+                            slug=slug,
+                            status=e.response.status_code,
+                        )
+                        raise
+                except httpx.HTTPError as e:
+                    logger.warning("ashby network error", error=str(e))
+                    raise
                 except Exception:
-                    logger.exception("ashby slug fetch failed", slug=slug)
+                    logger.exception("ashby slug parse error", slug=slug)
 
                 await sleep(1)
 

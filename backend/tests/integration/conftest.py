@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import asyncpg  # type: ignore[import-untyped]
 import pytest
+import redis.asyncio as aioredis
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.database import Base, get_session
+from app.dependencies import get_redis
 from app.main import app
 from app.models.job import Job  # noqa: F401  registers the table on Base.metadata
 
@@ -21,6 +23,7 @@ TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
     "postgresql+asyncpg://postgres:postgres@localhost:5433/jobsearch_test",
 )
+TEST_REDIS_URL = os.environ.get("TEST_REDIS_URL", "redis://localhost:6379/1")
 
 _parsed = urlparse(TEST_DATABASE_URL)
 _TEST_DB_NAME = _parsed.path.lstrip("/")
@@ -48,6 +51,22 @@ async def _ensure_test_database() -> None:
 
 
 @pytest.fixture
+async def redis_client() -> AsyncGenerator[aioredis.Redis, None]:
+    r: aioredis.Redis = aioredis.Redis.from_url(TEST_REDIS_URL, decode_responses=True)
+    try:
+        await asyncio.wait_for(r.ping(), timeout=2)
+    except Exception:
+        await r.aclose()
+        pytest.skip("Redis not reachable — skipping integration test")
+    await r.flushdb()
+    try:
+        yield r
+    finally:
+        await r.flushdb()
+        await r.aclose()
+
+
+@pytest.fixture
 async def engine() -> AsyncGenerator[AsyncEngine, None]:
     await _ensure_test_database()
     eng = create_async_engine(TEST_DATABASE_URL)
@@ -69,14 +88,20 @@ async def db_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-async def api_client(engine: AsyncEngine) -> AsyncGenerator[AsyncClient, None]:
+async def api_client(
+    engine: AsyncEngine, redis_client: aioredis.Redis
+) -> AsyncGenerator[AsyncClient, None]:
     factory = async_sessionmaker(engine, expire_on_commit=False)
 
     async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
         async with factory() as session:
             yield session
 
+    async def override_get_redis() -> AsyncGenerator[aioredis.Redis, None]:
+        yield redis_client
+
     app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_redis] = override_get_redis
     try:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
@@ -84,3 +109,4 @@ async def api_client(engine: AsyncEngine) -> AsyncGenerator[AsyncClient, None]:
             yield client
     finally:
         app.dependency_overrides.pop(get_session, None)
+        app.dependency_overrides.pop(get_redis, None)

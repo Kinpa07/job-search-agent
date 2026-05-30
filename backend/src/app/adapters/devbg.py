@@ -137,11 +137,20 @@ class DevBgAdapter:
                 except httpx.HTTPStatusError as e:
                     if e.response.status_code == 404:
                         logger.info("devbg last page reached", page=page - 1)
+                        break
                     else:
-                        logger.exception("devbg fetch failed", page=page)
-                    break
+                        logger.warning(
+                            "devbg server error",
+                            status=e.response.status_code,
+                            page=page,
+                        )
+                        raise
+
+                except httpx.HTTPError as e:
+                    logger.warning("devbg network error", error=str(e), page=page)
+                    raise
                 except Exception:
-                    logger.exception("devbg fetch failed", page=page)
+                    logger.exception("devbg parse error", page=page)
                     break
 
         logger.info("devbg fetch completed", job_count=len(result))

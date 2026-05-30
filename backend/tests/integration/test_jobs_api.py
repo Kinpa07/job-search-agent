@@ -1,6 +1,8 @@
+import json
 from typing import Any
 
 import pytest
+import redis.asyncio as aioredis
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -105,3 +107,67 @@ async def test_poll_runs_adapters_and_returns_counts(
 
     stored = (await api_client.get("/api/v1/jobs/")).json()
     assert [j["title"] for j in stored] == ["Junior Developer"]
+
+
+_SAMPLE_LAST_RUN = {
+    "completed_at": "2026-05-30T22:00:00+00:00",
+    "counts": {
+        "arbeitnow": {"job_count": 10, "new_count": 5},
+        "remotive": {"job_count": 3, "new_count": 0},
+    },
+}
+
+
+async def test_poll_status_returns_last_run(
+    api_client: AsyncClient,
+    redis_client: aioredis.Redis,
+) -> None:
+    await redis_client.set("poll:last_run", json.dumps(_SAMPLE_LAST_RUN))
+
+    response = await api_client.get("/api/v1/jobs/poll/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is not None
+    assert body["counts"]["arbeitnow"]["job_count"] == 10
+    assert body["counts"]["arbeitnow"]["new_count"] == 5
+    assert body["counts"]["remotive"]["new_count"] == 0
+
+
+async def test_poll_status_never_run(api_client: AsyncClient) -> None:
+    response = await api_client.get("/api/v1/jobs/poll/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is None
+    assert body["counts"] == {}
+
+
+async def test_poll_trigger_runs_synchronously(
+    api_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def empty(self: Any, filters: JobFilters) -> list[RawJob]:
+        return []
+
+    async def one(self: Any, filters: JobFilters) -> list[RawJob]:
+        return [_raw("Junior Developer", source="arbeitnow")]
+
+    monkeypatch.setattr(arbeitnow.ArbeitNowAdapter, "fetch_jobs", one)
+    monkeypatch.setattr(remotive.RemotiveAdapter, "fetch_jobs", empty)
+    monkeypatch.setattr(devbg.DevBgAdapter, "fetch_jobs", empty)
+    monkeypatch.setattr(greenhouse.GreenhouseAdapter, "fetch_jobs", empty)
+    monkeypatch.setattr(lever.LeverAdapter, "fetch_jobs", empty)
+    monkeypatch.setattr(ashby.AshbyAdapter, "fetch_jobs", empty)
+
+    response = await api_client.post("/api/v1/jobs/poll/trigger")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is not None
+    assert body["counts"]["arbeitnow"]["new_count"] == 1
+    assert body["errors"] == {}
+
+    # Ran in-request: the job is stored, not just enqueued for a worker.
+    stored = (await api_client.get("/api/v1/jobs/")).json()
+    assert [j["title"] for j in stored] == ["Junior Developer"]
+
+    # And the run was recorded so /poll/status reflects it.
+    status = (await api_client.get("/api/v1/jobs/poll/status")).json()
+    assert status["counts"]["arbeitnow"]["new_count"] == 1
