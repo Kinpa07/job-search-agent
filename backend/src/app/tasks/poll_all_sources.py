@@ -1,7 +1,10 @@
 import asyncio
+import json
 import time
+from datetime import UTC, datetime
 
 import httpx
+import redis.asyncio as aioredis
 import structlog
 
 from app.adapters.arbeitnow import ArbeitNowAdapter
@@ -12,6 +15,7 @@ from app.adapters.greenhouse import GreenhouseAdapter
 from app.adapters.lever import LeverAdapter
 from app.adapters.remotive import RemotiveAdapter
 from app.celery_app import celery_app
+from app.config import settings
 from app.database import async_session_factory
 from app.repositories.job import JobRepository
 
