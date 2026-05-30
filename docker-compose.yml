@@ -36,6 +36,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    user: nobody  # temp: suppresses Celery root warning — replace with Dockerfile USER directive in Module 12
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/jobsearch
       REDIS_URL: redis://redis:6379/0
@@ -51,6 +52,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    user: nobody  # temp: suppresses Celery root warning — replace with Dockerfile USER directive in Module 12
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/jobsearch
       REDIS_URL: redis://redis:6379/0
@@ -59,7 +61,7 @@ services:
       - redis
     volumes:
       - ./backend:/app
-    command: celery -A src.app.celery_app beat --loglevel=info
+    command: celery -A src.app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
 
 volumes:
   postgres_data:
