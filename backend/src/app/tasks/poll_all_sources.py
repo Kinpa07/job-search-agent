@@ -47,6 +47,7 @@ async def _poll_jobs() -> dict[str, int]:
         ]
 
         result: dict[str, int] = {}
+        last_run_result: dict[str, dict[str, int]] = {}
         for adapter in adapters:
             source = adapter.source_name()
             try:
@@ -62,9 +63,20 @@ async def _poll_jobs() -> dict[str, int]:
                     elapsed_seconds=round(elapsed, 2),
                 )
                 result[source] = count
+                last_run_result[source] = {
+                    "job_count": len(raw_jobs),
+                    "new_count": count,
+                }
             except httpx.HTTPError as e:
                 logger.warning("adapter poll failed", source=source, error=str(e))
                 raise
 
         logger.info("poll_all_sources completed", result=result)
+        async with aioredis.from_url(settings.redis_url, decode_responses=True) as redis:
+            await redis.set(
+                "poll:last_run",
+                json.dumps(
+                    {"completed_at": datetime.now(UTC).isoformat(), "counts": last_run_result}
+                ),
+            )
         return result

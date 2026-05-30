@@ -1,6 +1,8 @@
+import json
 import time
 
 import httpx
+import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +15,10 @@ from app.adapters.greenhouse import GreenhouseAdapter
 from app.adapters.lever import LeverAdapter
 from app.adapters.remotive import RemotiveAdapter
 from app.database import get_session
+from app.dependencies import get_redis
 from app.repositories.job import JobRepository
 from app.schemas.job import JobResponse
+from app.schemas.poll_status import PollStatusResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 logger = structlog.get_logger()
@@ -30,6 +34,15 @@ async def get_jobs(
     repo = JobRepository(session)
     jobs = await repo.get_jobs(source=source, offset=offset, limit=limit)
     return [JobResponse.model_validate(job) for job in jobs]
+
+
+@router.get("/poll/status")
+async def get_poll_status(redis: aioredis.Redis = Depends(get_redis)) -> PollStatusResponse:
+    last_run = await redis.get("poll:last_run")
+    if last_run:
+        return PollStatusResponse(**json.loads(last_run))
+    else:
+        return PollStatusResponse(completed_at=None, counts={})
 
 
 @router.post("/poll")
