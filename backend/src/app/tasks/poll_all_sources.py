@@ -1,28 +1,17 @@
 import asyncio
-import json
-import time
-from datetime import UTC, datetime
 
 import httpx
 import redis.asyncio as aioredis
-import structlog
 
-from app.adapters.arbeitnow import ArbeitNowAdapter
-from app.adapters.ashby import AshbyAdapter
-from app.adapters.base import JobFilters, JobSource
-from app.adapters.devbg import DevBgAdapter
-from app.adapters.greenhouse import GreenhouseAdapter
-from app.adapters.lever import LeverAdapter
-from app.adapters.remotive import RemotiveAdapter
+from app.adapters.base import JobFilters
 from app.celery_app import celery_app
 from app.config import settings
 from app.database import async_session_factory
 from app.repositories.job import JobRepository
+from app.services.polling import record_poll_status, run_poll
 
-logger = structlog.get_logger()
 
-
-@celery_app.task(
+@celery_app.task(  # type: ignore[untyped-decorator]
     name="app.tasks.poll_all_sources",
     max_retries=3,
     retry_backoff=True,
@@ -33,50 +22,19 @@ def poll_jobs() -> dict[str, int]:
 
 
 async def _poll_jobs() -> dict[str, int]:
-
     async with async_session_factory() as session:
         repo = JobRepository(session)
+        result = await run_poll(repo, JobFilters())
 
-        adapters: list[JobSource] = [
-            ArbeitNowAdapter(),
-            RemotiveAdapter(),
-            DevBgAdapter(),
-            GreenhouseAdapter(),
-            LeverAdapter(),
-            AshbyAdapter(),
-        ]
+    async with aioredis.Redis.from_url(settings.redis_url, decode_responses=True) as redis:
+        await record_poll_status(redis, result)
 
-        result: dict[str, int] = {}
-        last_run_result: dict[str, dict[str, int]] = {}
-        for adapter in adapters:
-            source = adapter.source_name()
-            try:
-                start = time.perf_counter()
-                raw_jobs = await adapter.fetch_jobs(JobFilters())
-                count = await repo.add_jobs(raw_jobs)
-                elapsed = time.perf_counter() - start
-                logger.info(
-                    "adapter polled",
-                    source=source,
-                    job_count=len(raw_jobs),
-                    new_count=count,
-                    elapsed_seconds=round(elapsed, 2),
-                )
-                result[source] = count
-                last_run_result[source] = {
-                    "job_count": len(raw_jobs),
-                    "new_count": count,
-                }
-            except httpx.HTTPError as e:
-                logger.warning("adapter poll failed", source=source, error=str(e))
-                raise
+    # Network errors were isolated per-source so every source got a turn and the
+    # status was recorded; now re-raise one to let autoretry_for retry the poll.
+    if result.exceptions:
+        raise result.exceptions[0]
 
-        logger.info("poll_all_sources completed", result=result)
-        async with aioredis.from_url(settings.redis_url, decode_responses=True) as redis:
-            await redis.set(
-                "poll:last_run",
-                json.dumps(
-                    {"completed_at": datetime.now(UTC).isoformat(), "counts": last_run_result}
-                ),
-            )
-        return result
+    new_counts: dict[str, int] = {}
+    for source, counts in result.counts.items():
+        new_counts[source] = counts.new_count
+    return new_counts
