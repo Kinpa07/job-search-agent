@@ -91,9 +91,10 @@ async def test_keyword_filter_matches_title(
     assert [j.title for j in jobs] == ["Junior Python Developer"]
 
 
-async def test_network_error_returns_empty_list(patch_httpx: PatchHttpx) -> None:
+async def test_http_error_propagates(patch_httpx: PatchHttpx) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500)
 
     patch_httpx("app.adapters.arbeitnow", handler)
-    assert await ArbeitNowAdapter().fetch_jobs(JobFilters()) == []
+    with pytest.raises(httpx.HTTPError):
+        await ArbeitNowAdapter().fetch_jobs(JobFilters())

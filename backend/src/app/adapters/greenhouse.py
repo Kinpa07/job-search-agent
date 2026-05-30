@@ -15,7 +15,7 @@ COMPANY_SLUGS = {
     "conga": "Conga",
     "bettyjobboard": "Betty",
     "payhawkio": "Payhawk",
-"skyscanner": "Skyscanner",
+    "skyscanner": "Skyscanner",
 }
 
 
@@ -36,9 +36,7 @@ class GreenhouseAdapter:
 
                     filtered = data
 
-                    filtered = [
-                        job for job in filtered if title_allowed(job["title"], filters)
-                    ]
+                    filtered = [job for job in filtered if title_allowed(job["title"], filters)]
 
                     if filters.keywords:
                         keywords = [keyword.lower() for keyword in filters.keywords]
@@ -94,9 +92,17 @@ class GreenhouseAdapter:
                             status=e.response.status_code,
                         )
                     else:
-                        logger.exception("greenhouse slug fetch failed", slug=slug)
+                        logger.warning(
+                            "greenhouse slug server error",
+                            slug=slug,
+                            status=e.response.status_code,
+                        )
+                        raise
+                except httpx.HTTPError as e:
+                    logger.warning("greenhouse network error", error=str(e))
+                    raise
                 except Exception:
-                    logger.exception("greenhouse slug fetch failed", slug=slug)
+                    logger.exception("greenhouse slug parse error", slug=slug)
 
         logger.info("greenhouse fetch completed", job_count=len(result))
         return result

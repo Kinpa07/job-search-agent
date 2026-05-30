@@ -86,9 +86,17 @@ class LeverAdapter:
                             status=e.response.status_code,
                         )
                     else:
-                        logger.exception("lever slug fetch failed", slug=slug)
+                        logger.warning(
+                            "lever slug server error",
+                            slug=slug,
+                            status=e.response.status_code,
+                        )
+                        raise
+                except httpx.HTTPError as e:
+                    logger.warning("lever network error", error=str(e))
+                    raise
                 except Exception:
-                    logger.exception("lever slug fetch failed", slug=slug)
+                    logger.exception("lever slug parse error", slug=slug)
 
                 await sleep(1)
 
