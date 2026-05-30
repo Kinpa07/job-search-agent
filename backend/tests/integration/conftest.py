@@ -51,8 +51,8 @@ async def _ensure_test_database() -> None:
 
 
 @pytest.fixture
-async def redis_client() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
-    r: aioredis.Redis = aioredis.Redis.from_url(TEST_REDIS_URL, decode_responses=True)  # type: ignore[type-arg]
+async def redis_client() -> AsyncGenerator[aioredis.Redis, None]:
+    r: aioredis.Redis = aioredis.Redis.from_url(TEST_REDIS_URL, decode_responses=True)
     try:
         await asyncio.wait_for(r.ping(), timeout=2)
     except Exception:
@@ -89,7 +89,7 @@ async def db_session(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 async def api_client(
-    engine: AsyncEngine, redis_client: aioredis.Redis  # type: ignore[type-arg]
+    engine: AsyncEngine, redis_client: aioredis.Redis
 ) -> AsyncGenerator[AsyncClient, None]:
     factory = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -97,7 +97,7 @@ async def api_client(
         async with factory() as session:
             yield session
 
-    async def override_get_redis() -> AsyncGenerator[aioredis.Redis, None]:  # type: ignore[type-arg]
+    async def override_get_redis() -> AsyncGenerator[aioredis.Redis, None]:
         yield redis_client
 
     app.dependency_overrides[get_session] = override_get_session
