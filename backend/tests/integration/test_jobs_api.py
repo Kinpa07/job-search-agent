@@ -83,30 +83,6 @@ async def test_import_stores_jobs(api_client: AsyncClient) -> None:
     assert len(stored) == 1
 
 
-async def test_poll_runs_adapters_and_returns_counts(
-    api_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    async def empty(self: Any, filters: JobFilters) -> list[RawJob]:
-        return []
-
-    async def one(self: Any, filters: JobFilters) -> list[RawJob]:
-        return [_raw("Junior Developer", source="arbeitnow")]
-
-    monkeypatch.setattr(arbeitnow.ArbeitNowAdapter, "fetch_jobs", one)
-    monkeypatch.setattr(remotive.RemotiveAdapter, "fetch_jobs", empty)
-    monkeypatch.setattr(devbg.DevBgAdapter, "fetch_jobs", empty)
-    monkeypatch.setattr(greenhouse.GreenhouseAdapter, "fetch_jobs", empty)
-    monkeypatch.setattr(lever.LeverAdapter, "fetch_jobs", empty)
-    monkeypatch.setattr(ashby.AshbyAdapter, "fetch_jobs", empty)
-
-    response = await api_client.post("/api/v1/jobs/poll")
-    assert response.status_code == 200
-    body = response.json()
-    assert body["arbeitnow"] == 1
-    assert body["remotive"] == 0
-
-    stored = (await api_client.get("/api/v1/jobs/")).json()
-    assert [j["title"] for j in stored] == ["Junior Developer"]
 
 
 _SAMPLE_LAST_RUN = {
@@ -141,7 +117,7 @@ async def test_poll_status_never_run(api_client: AsyncClient) -> None:
     assert body["counts"] == {}
 
 
-async def test_poll_trigger_runs_synchronously(
+async def test_poll_runs_synchronously_and_records_status(
     api_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     async def empty(self: Any, filters: JobFilters) -> list[RawJob]:
@@ -157,7 +133,7 @@ async def test_poll_trigger_runs_synchronously(
     monkeypatch.setattr(lever.LeverAdapter, "fetch_jobs", empty)
     monkeypatch.setattr(ashby.AshbyAdapter, "fetch_jobs", empty)
 
-    response = await api_client.post("/api/v1/jobs/poll/trigger")
+    response = await api_client.post("/api/v1/jobs/poll")
     assert response.status_code == 200
     body = response.json()
     assert body["completed_at"] is not None

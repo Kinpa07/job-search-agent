@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from app.config import settings
+
 
 @dataclass
 class RawJob:
@@ -17,43 +19,18 @@ class RawJob:
 @dataclass
 class JobFilters:
     keywords: list[str] = field(default_factory=list)
-    location: str | None = None
-    remote_ok: bool = False
-    entry_level_only: bool = True
-    posted_within_days: int = 1
+    location: str | None = field(default_factory=lambda: settings.default_location)
+    remote_ok: bool = field(default_factory=lambda: settings.default_remote_ok)
+    entry_level_only: bool = field(default_factory=lambda: settings.default_entry_level_only)
+    posted_within_days: int = field(default_factory=lambda: settings.default_posted_within_days)
 
-
-SENIORITY_TERMS = (
-    "senior",
-    "sr",
-    "lead",
-    "principal",
-    "staff",
-    "head of",
-    "director",
-    "vp",
-    "vice president",
-)
-
-EXCLUDE_TITLE_TERMS = (
-    "manager",
-    "designer",
-    "recruiter",
-    "sales",
-    "account executive",
-    "marketing",
-    "human resources",
-    "accountant",
-    "customer success",
-    "scrum master",
-)
 
 _SENIORITY_RE = re.compile(
-    r"\b(?:" + "|".join(re.escape(term) for term in SENIORITY_TERMS) + r")\b",
+    r"\b(?:" + "|".join(re.escape(term) for term in settings.seniority_terms) + r")\b",
     re.IGNORECASE,
 )
 _EXCLUDE_RE = re.compile(
-    r"\b(?:" + "|".join(re.escape(term) for term in EXCLUDE_TITLE_TERMS) + r")\b",
+    r"\b(?:" + "|".join(re.escape(term) for term in settings.exclude_title_terms) + r")\b",
     re.IGNORECASE,
 )
 

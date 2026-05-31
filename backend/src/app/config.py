@@ -20,6 +20,73 @@ class Settings(BaseSettings):
     langchain_api_key: str = ""
     langchain_project: str = "job-search-agent"
 
+    # Source slug registries (Module 1)
+    greenhouse_slugs: dict[str, str] = {
+        "sumup": "SumUp",
+        "ocadogroup": "Ocado Group",
+        "sofiastars": "Sofia Stars",
+        "workboard": "WorkBoard",
+        "pointwild": "Point Wild",
+        "conga": "Conga",
+        "bettyjobboard": "Betty",
+        "payhawkio": "Payhawk",
+        "skyscanner": "Skyscanner",
+    }
+    lever_slugs: dict[str, str] = {
+        "Fliff": "Fliff",
+        "capital": "Capital.com",
+        "crypto": "Crypto.com",
+        "binance": "Binance",
+        "OpenPayd": "OpenPayd",
+        "doola": "doola",
+        "remofirst": "RemoFirst",
+        "pipedrive": "Pipedrive",
+    }
+    ashby_slugs: dict[str, str] = {
+        "trading212": "Trading212",
+        "elevenlabs": "ElevenLabs",
+        "searchapi": "SearchApi",
+        "n8n": "n8n",
+        "Redis": "Redis",
+        "lucidlink": "LucidLink",
+        "p2p.org": "P2P.org",
+        "duvo": "Duvo",
+    }
+
+    # Polling cadence (Module 2)
+    poll_interval_seconds: int = 6 * 60 * 60  # 6 hours
+
+    # Default operator filters (Module 1 — used by JobFilters)
+    default_entry_level_only: bool = True
+    default_posted_within_days: int = 1
+    default_remote_ok: bool = False
+    default_location: str | None = None
+
+    # Title-filter term lists (Module 1 — used by title_allowed in adapters/base.py)
+    seniority_terms: tuple[str, ...] = (
+        "senior",
+        "sr",
+        "lead",
+        "principal",
+        "staff",
+        "head of",
+        "director",
+        "vp",
+        "vice president",
+    )
+    exclude_title_terms: tuple[str, ...] = (
+        "manager",
+        "designer",
+        "recruiter",
+        "sales",
+        "account executive",
+        "marketing",
+        "human resources",
+        "accountant",
+        "customer success",
+        "scrum master",
+    )
+
 
 settings = Settings()
 

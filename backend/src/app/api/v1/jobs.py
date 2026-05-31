@@ -40,25 +40,16 @@ async def get_poll_status(redis: aioredis.Redis = Depends(get_redis)) -> PollSta
 async def poll_jobs(
     keywords: list[str] | None = None,
     session: AsyncSession = Depends(get_session),
-) -> dict[str, int]:
-    repo = JobRepository(session)
-    result = await run_poll(repo, JobFilters(keywords=keywords or []))
-    new_counts: dict[str, int] = {}
-    for source, counts in result.counts.items():
-        new_counts[source] = counts.new_count
-    return new_counts
-
-
-@router.post("/poll/trigger")
-async def trigger_polling(
-    session: AsyncSession = Depends(get_session),
     redis: aioredis.Redis = Depends(get_redis),
 ) -> PollStatusResponse:
-    """Run a poll synchronously, in-request — the free-tier deployment has no
-    always-on worker, so an external cron (cron-job.org) hits this and the work
-    must happen here rather than being enqueued for a worker that isn't running."""
+    """Run a poll synchronously and persist status to Redis.
+
+    Manual trigger / script automation entry point. Celery Beat (Module 2) is
+    the normal driver; this endpoint is what you hit when you want to force a
+    poll right now without waiting for the next scheduled run.
+    """
     repo = JobRepository(session)
-    result = await run_poll(repo, JobFilters())
+    result = await run_poll(repo, JobFilters(keywords=keywords or []))
     await record_poll_status(redis, result)
     return PollStatusResponse(
         completed_at=datetime.now(UTC),

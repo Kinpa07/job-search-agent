@@ -5,19 +5,7 @@ import structlog
 from bs4 import BeautifulSoup
 
 from app.adapters.base import JobFilters, RawJob, title_allowed
-
-COMPANY_SLUGS = {
-    "sumup": "SumUp",
-    "ocadogroup": "Ocado Group",
-    "sofiastars": "Sofia Stars",
-    "workboard": "WorkBoard",
-    "pointwild": "Point Wild",
-    "conga": "Conga",
-    "bettyjobboard": "Betty",
-    "payhawkio": "Payhawk",
-    "skyscanner": "Skyscanner",
-}
-
+from app.config import settings
 
 logger = structlog.get_logger()
 
@@ -26,7 +14,7 @@ class GreenhouseAdapter:
     async def fetch_jobs(self, filters: JobFilters) -> list[RawJob]:
         result = []
         async with httpx.AsyncClient() as client:
-            for slug, company_name in COMPANY_SLUGS.items():
+            for slug, company_name in settings.greenhouse_slugs.items():
                 try:
                     response = await client.get(
                         f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true"
