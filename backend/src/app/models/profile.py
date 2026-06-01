@@ -1,8 +1,8 @@
 from datetime import date
-from typing import Literal
+from typing import Any, Literal
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -12,12 +12,16 @@ class UserProfile(Base):
     __tablename__ = "user_profiles"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(255))
-    email: Mapped[str] = mapped_column(String(255))
+    # name/email are nullable while status="draft" — the draft lives in draft_data
+    # and these columns are only populated when the profile is confirmed.
+    name: Mapped[str | None] = mapped_column(String(255))
+    email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(100))
     location: Mapped[str | None] = mapped_column(String(255))
     summary: Mapped[str | None] = mapped_column(Text)
     status: Mapped[Literal["draft", "confirmed"]] = mapped_column(String(20), default="draft")
+    # Raw extracted profile (incl. per-skill confidence) while status="draft"; NULL once confirmed.
+    draft_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     search_keywords: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     created_at: Mapped[date] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[date] = mapped_column(
