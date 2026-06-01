@@ -37,6 +37,8 @@ def extract_structured(state: CVParserState, llm: BaseChatModel) -> CVParserStat
     )
     if not result.tool_calls:
         raise ValueError("LLM did not return any tool calls. Unable to extract profile data.")
-    state.extracted_profile = result.tool_calls[0]["args"]
+    state.extracted_profile = UserProfileData.model_validate(
+        result.tool_calls[0]["args"]
+    ).model_dump()
     logger.info("cv.extract_structured.done", extracted_profile=state.extracted_profile)
     return state
