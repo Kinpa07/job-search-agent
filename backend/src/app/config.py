@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # Claude API (Module 3+)
     anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-4-6"
 
     # LangSmith tracing (Module 3+, Standing Rule 7)
     langchain_tracing_v2: bool = False
