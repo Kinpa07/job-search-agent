@@ -2,6 +2,7 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 import fitz  # pymupdf
+import ftfy
 import structlog
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -45,7 +46,9 @@ def _profile_links(doc: Any) -> tuple[str | None, str | None]:
 def extract_text(state: CVParserState) -> CVParserState:
     doc = fitz.open(stream=state.pdf_bytes, filetype="pdf")
     pages = [cast(str, page.get_text("text")) for page in doc]
-    text = "\n".join(pages).strip()
+    # Repair mojibake from PDF glyph mis-decoding (â€" → —, DALLÂ·E → DALL·E) before the
+    # LLM sees the text, so "copy verbatim" stays honest and every field comes out clean.
+    text = ftfy.fix_text("\n".join(pages)).strip()
 
     if len(text) < MIN_TEXT_LENGTH:
         raise ValueError(
