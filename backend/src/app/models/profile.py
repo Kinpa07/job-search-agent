@@ -21,7 +21,10 @@ class UserProfile(Base):
     summary: Mapped[str | None] = mapped_column(Text)
     status: Mapped[Literal["draft", "confirmed"]] = mapped_column(String(20), default="draft")
     # Raw extracted profile (incl. per-skill confidence) while status="draft"; NULL once confirmed.
-    draft_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    # none_as_null=True so `draft_data = None` writes SQL NULL, not the JSON `null` literal.
+    draft_data: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB(none_as_null=True), nullable=True
+    )
     search_keywords: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     created_at: Mapped[date] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[date] = mapped_column(
