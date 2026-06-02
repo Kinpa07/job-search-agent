@@ -52,3 +52,7 @@ class UserProfileRepository:
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
+
+    async def save(self, profile: UserProfile) -> None:
+        await self.session.commit()
+        await self.session.refresh(profile)
