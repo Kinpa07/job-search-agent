@@ -4,7 +4,7 @@ import httpx
 import structlog
 from bs4 import BeautifulSoup
 
-from app.adapters.base import JobFilters, RawJob, title_allowed
+from app.adapters.base import JobFilters, RawJob, keyword_matches, title_allowed
 from app.config import settings
 
 logger = structlog.get_logger()
@@ -27,11 +27,10 @@ class GreenhouseAdapter:
                     filtered = [job for job in filtered if title_allowed(job["title"], filters)]
 
                     if filters.keywords:
-                        keywords = [keyword.lower() for keyword in filters.keywords]
                         filtered = [
                             job
                             for job in filtered
-                            if any(keyword in job["title"].lower() for keyword in keywords)
+                            if keyword_matches(job["title"], filters.keywords)
                         ]
 
                     if filters.location:
