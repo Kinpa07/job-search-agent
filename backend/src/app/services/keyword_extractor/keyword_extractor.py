@@ -5,6 +5,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
+from app.llm_cache import invoke_tool
 from app.models import UserProfile
 from app.services.keyword_extractor.prompts import PROMPT
 
@@ -29,11 +30,10 @@ def extract_keywords(profile: UserProfile, llm: BaseChatModel) -> list[str]:
         ],
     }
 
-    result = llm.bind_tools([KeywordExtractorResult], tool_choice="KeywordExtractorResult").invoke(
-        [
-            SystemMessage(content=PROMPT),
-            HumanMessage(content=json.dumps(profile_summary)),
-        ],
+    result = invoke_tool(
+        llm,
+        KeywordExtractorResult,
+        [SystemMessage(content=PROMPT), HumanMessage(content=json.dumps(profile_summary))],
     )
     if not result.tool_calls:
         raise ValueError("LLM did not return any tool calls. Unable to extract keywords.")

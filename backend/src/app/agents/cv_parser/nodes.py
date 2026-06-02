@@ -10,6 +10,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from app.agents.cv_parser.prompts import PROMPT
 from app.agents.cv_parser.schemas import UserProfileData
 from app.agents.cv_parser.state import CVParserState
+from app.llm_cache import invoke_tool
 
 logger = structlog.get_logger()
 
@@ -69,8 +70,8 @@ def extract_text(state: CVParserState) -> CVParserState:
 
 
 def extract_structured(state: CVParserState, llm: BaseChatModel) -> CVParserState:
-    result = llm.bind_tools([UserProfileData], tool_choice="UserProfileData").invoke(
-        [SystemMessage(content=PROMPT), HumanMessage(content=state.raw_text)],
+    result = invoke_tool(
+        llm, UserProfileData, [SystemMessage(content=PROMPT), HumanMessage(content=state.raw_text)]
     )
     if not result.tool_calls:
         raise ValueError("LLM did not return any tool calls. Unable to extract profile data.")

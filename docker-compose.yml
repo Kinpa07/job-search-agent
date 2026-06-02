@@ -26,6 +26,9 @@ services:
       REDIS_URL: redis://redis:6379/0
       PYTHONPATH: /app/src
       TZ: Europe/Sofia
+      # Dev convenience: replay identical LLM requests from .llm_cache instead of paying for
+      # them again. Set "false" (or delete backend/.llm_cache) to force fresh calls.
+      LLM_CACHE_ENABLED: "true"
     depends_on:
       - db
       - redis

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Claude API (Module 3+)
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
+    # Dev record/replay cache for tool-calling LLM invocations (Standing Rule 6). Off by
+    # default — flip on (LLM_CACHE_ENABLED=true) to replay identical requests for free.
+    llm_cache_enabled: bool = False
 
     # LangSmith tracing (Module 3+, Standing Rule 7)
     langchain_tracing_v2: bool = False

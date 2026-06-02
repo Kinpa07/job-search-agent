@@ -66,3 +66,6 @@ SCAFFOLD.md
 HANDOFF.md
 CLAUDE.md
 .claude/
+
+# Dev LLM record/replay cache (Standing Rule 6)
+backend/.llm_cache/
