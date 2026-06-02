@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 from app.api.v1.jobs import router as jobs_router
 from app.config import settings
+from app.errors import register_exception_handlers
 
 
 def configure_logging() -> None:
@@ -39,6 +40,7 @@ configure_logging()
 
 app = FastAPI(title="Job Search Agent")
 app.include_router(jobs_router, prefix="/api/v1")
+register_exception_handlers(app)
 
 
 @app.get("/health")
