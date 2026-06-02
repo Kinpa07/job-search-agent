@@ -23,6 +23,10 @@ def extract_keywords(profile: UserProfile, llm: BaseChatModel) -> list[str]:
             {"title": e.title, "tech_stack": e.tech_stack, "bullets": e.bullets}
             for e in profile.experiences
         ],
+        "projects": [
+            {"name": p.name, "tech_stack": p.tech_stack, "bullets": p.bullets}
+            for p in profile.projects
+        ],
     }
 
     result = llm.bind_tools([KeywordExtractorResult], tool_choice="KeywordExtractorResult").invoke(
