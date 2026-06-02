@@ -1,8 +1,24 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.orm.strategy_options import _AbstractLoad
 
 from app.models.profile import UserProfile
+
+# Every child collection — eager-loaded everywhere a profile is read so serialization and
+# the delete-orphan cascade never hit an unloaded relationship (MissingGreenlet in async).
+_CHILD_RELATIONSHIPS = (
+    UserProfile.skills,
+    UserProfile.experiences,
+    UserProfile.educations,
+    UserProfile.projects,
+    UserProfile.certifications,
+    UserProfile.languages,
+)
+
+
+def _child_loads() -> list[_AbstractLoad]:
+    return [selectinload(rel) for rel in _CHILD_RELATIONSHIPS]
 
 
 class UserProfileRepository:
@@ -24,15 +40,7 @@ class UserProfileRepository:
         Children are selectinload-ed so the `all, delete-orphan` cascade can issue
         their DELETEs; without them loaded the async unit of work would MissingGreenlet
         trying to lazy-load on flush (and the FK has no DB-level ON DELETE CASCADE)."""
-        stmt = (
-            select(UserProfile)
-            .where(UserProfile.status == status)
-            .options(
-                selectinload(UserProfile.skills),
-                selectinload(UserProfile.experiences),
-                selectinload(UserProfile.educations),
-            )
-        )
+        stmt = select(UserProfile).where(UserProfile.status == status).options(*_child_loads())
         result = await self.session.execute(stmt)
         for profile in result.scalars():
             await self.session.delete(profile)
@@ -45,13 +53,7 @@ class UserProfileRepository:
 
     async def get_by_id(self, profile_id: int) -> UserProfile | None:
         stmt = (
-            select(UserProfile)
-            .where(UserProfile.id == profile_id)
-            .options(
-                selectinload(UserProfile.skills),
-                selectinload(UserProfile.experiences),
-                selectinload(UserProfile.educations),
-            )
+            select(UserProfile).where(UserProfile.id == profile_id).options(*_child_loads())
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -65,11 +67,7 @@ class UserProfileRepository:
             select(UserProfile)
             .where(UserProfile.status == status)
             .order_by(UserProfile.created_at.desc())
-            .options(
-                selectinload(UserProfile.skills),
-                selectinload(UserProfile.experiences),
-                selectinload(UserProfile.educations),
-            )
+            .options(*_child_loads())
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()
