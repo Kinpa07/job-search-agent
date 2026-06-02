@@ -59,6 +59,7 @@ async def persist_confirmed(
         )
         for e in data.educations
     ]
+    await repo.delete_by_status("confirmed")  # Enforce single confirmed profile invariant
     draft.status = "confirmed"
     draft.draft_data = None  # Clear draft data to save space; it's no longer needed
     draft.search_keywords = extract_keywords(draft, llm)
