@@ -52,6 +52,9 @@ class UserProfile(Base):
     certifications: Mapped[list["Certification"]] = relationship(
         back_populates="profile", cascade="all, delete-orphan"
     )
+    languages: Mapped[list["Language"]] = relationship(
+        back_populates="profile", cascade="all, delete-orphan"
+    )
 
 
 class Skill(Base):
@@ -62,6 +65,9 @@ class Skill(Base):
     name: Mapped[str] = mapped_column(String(255))
     proficiency_level: Mapped[ProficiencyLevel | None] = mapped_column(String(50))
     years: Mapped[float | None]
+    # Free-form section label from the CV ("Cloud & Infrastructure"); presentational only,
+    # used to regroup skills when re-rendering the CV. Never feeds matching.
+    category: Mapped[str | None] = mapped_column(String(255))
 
     profile: Mapped["UserProfile"] = relationship(back_populates="skills")
 
@@ -73,6 +79,7 @@ class Experience(Base):
     profile_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.id"))
     company: Mapped[str] = mapped_column(String(255))
     title: Mapped[str] = mapped_column(String(255))
+    location: Mapped[str | None] = mapped_column(String(255))
     start_date: Mapped[date | None]
     end_date: Mapped[date | None]
     bullets: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
@@ -89,7 +96,11 @@ class Education(Base):
     institution: Mapped[str] = mapped_column(String(255))
     degree: Mapped[str | None] = mapped_column(String(255))
     field: Mapped[str | None] = mapped_column(String(255))
-    year: Mapped[int | None]
+    location: Mapped[str | None] = mapped_column(String(255))
+    # Date range like Experience so the rendered CV can show "2021 - 2026" (or "- Present"
+    # when end_date is NULL); a bare graduation year couldn't reproduce that.
+    start_date: Mapped[date | None]
+    end_date: Mapped[date | None]
 
     profile: Mapped["UserProfile"] = relationship(back_populates="educations")
 
@@ -119,3 +130,14 @@ class Certification(Base):
     year: Mapped[int | None]
 
     profile: Mapped["UserProfile"] = relationship(back_populates="certifications")
+
+
+class Language(Base):
+    __tablename__ = "languages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    level: Mapped[str | None] = mapped_column(String(100))
+
+    profile: Mapped["UserProfile"] = relationship(back_populates="languages")

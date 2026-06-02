@@ -12,6 +12,7 @@ from app.models import (  # noqa: F401 — registers models to Base.metadata
     Education,
     Experience,
     Job,
+    Language,
     Project,
     Skill,
     UserProfile,
