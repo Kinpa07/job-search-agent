@@ -2,28 +2,13 @@ from pydantic import BaseModel, Field
 
 from app.enums import ProficiencyLevel
 
-PROFICIENCY_RUBRIC = """
-familiar: Listed as a skill or mentioned incidentally, with limited evidence of hands-on use.
-
-proficient: Demonstrated hands-on use in professional work or projects; appears in role 
-responsibilities, accomplishments, or project descriptions.
-
-expert: Strong evidence of deep expertise, such as technical ownership, leadership, 
-architecture/design responsibility, mentoring, many years of experience, 
-or explicit expert-level claims.
-""".strip()
-
 
 class Skill(BaseModel):
     name: str
-    proficiency_level: ProficiencyLevel | None = Field(default=None, description=PROFICIENCY_RUBRIC)
+    proficiency_level: ProficiencyLevel | None = None
     years: float | None = None
     confidence: float = 1.0
-    category: str | None = Field(
-        default=None,
-        description="The section header this skill was listed under on the CV, verbatim "
-        "(e.g. 'Cloud & Infrastructure'). Null if the CV lists skills without grouping.",
-    )
+    category: str | None = None
 
 
 class Experience(BaseModel):
@@ -60,10 +45,7 @@ class Certification(BaseModel):
 
 class Language(BaseModel):
     name: str
-    level: str | None = Field(
-        default=None,
-        description="Proficiency as written on the CV, verbatim (e.g. 'Native', 'Fluent (C1)').",
-    )
+    level: str | None = None
 
 
 class UserProfileData(BaseModel):
