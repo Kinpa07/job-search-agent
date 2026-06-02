@@ -2,6 +2,7 @@ import structlog
 from fastapi import FastAPI
 
 from app.api.v1.jobs import router as jobs_router
+from app.api.v1.profile import router as profile_router
 from app.config import settings
 from app.errors import register_exception_handlers
 
@@ -40,6 +41,7 @@ configure_logging()
 
 app = FastAPI(title="Job Search Agent")
 app.include_router(jobs_router, prefix="/api/v1")
+app.include_router(profile_router, prefix="/api/v1")
 register_exception_handlers(app)
 
 
