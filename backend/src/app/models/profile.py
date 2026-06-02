@@ -19,6 +19,11 @@ class UserProfile(Base):
     email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(100))
     location: Mapped[str | None] = mapped_column(String(255))
+    # github_url/linkedin_url are auto-captured by domain from PDF link annotations;
+    # portfolio_url is human-entered in review (project links can't be told apart).
+    github_url: Mapped[str | None] = mapped_column(String(500))
+    linkedin_url: Mapped[str | None] = mapped_column(String(500))
+    portfolio_url: Mapped[str | None] = mapped_column(String(500))
     summary: Mapped[str | None] = mapped_column(Text)
     status: Mapped[Literal["draft", "confirmed"]] = mapped_column(String(20), default="draft")
     # Raw extracted profile (incl. per-skill confidence) while status="draft"; NULL once confirmed.
@@ -39,6 +44,12 @@ class UserProfile(Base):
         back_populates="profile", cascade="all, delete-orphan"
     )
     educations: Mapped[list["Education"]] = relationship(
+        back_populates="profile", cascade="all, delete-orphan"
+    )
+    projects: Mapped[list["Project"]] = relationship(
+        back_populates="profile", cascade="all, delete-orphan"
+    )
+    certifications: Mapped[list["Certification"]] = relationship(
         back_populates="profile", cascade="all, delete-orphan"
     )
 
@@ -81,3 +92,30 @@ class Education(Base):
     year: Mapped[int | None]
 
     profile: Mapped["UserProfile"] = relationship(back_populates="educations")
+
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    bullets: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    tech_stack: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    # url is human-entered in review, never LLM-transcribed.
+    url: Mapped[str | None] = mapped_column(String(500))
+    year: Mapped[int | None]
+
+    profile: Mapped["UserProfile"] = relationship(back_populates="projects")
+
+
+class Certification(Base):
+    __tablename__ = "certifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    profile_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.id"))
+    name: Mapped[str] = mapped_column(String(255))
+    issuer: Mapped[str | None] = mapped_column(String(255))
+    year: Mapped[int | None]
+
+    profile: Mapped["UserProfile"] = relationship(back_populates="certifications")
