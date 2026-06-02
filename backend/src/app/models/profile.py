@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from app.enums import ProficiencyLevel
 
 
 class UserProfile(Base):
@@ -48,7 +49,7 @@ class Skill(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     profile_id: Mapped[int] = mapped_column(ForeignKey("user_profiles.id"))
     name: Mapped[str] = mapped_column(String(255))
-    proficiency_level: Mapped[str | None] = mapped_column(String(50))
+    proficiency_level: Mapped[ProficiencyLevel | None] = mapped_column(String(50))
     years: Mapped[float | None]
 
     profile: Mapped["UserProfile"] = relationship(back_populates="skills")

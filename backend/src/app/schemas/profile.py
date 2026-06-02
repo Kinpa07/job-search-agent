@@ -2,6 +2,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict
 
+from app.enums import ProficiencyLevel
+
 # --- Request side (user-submitted corrections) ---
 # Dates arrive as free-text strings ("Mar 2021", "Present") — persist_confirmed parses
 # them to real dates. extra="ignore" lets the draft's confidence field pass through
@@ -12,7 +14,7 @@ class SkillIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     name: str
-    proficiency_level: str | None = None
+    proficiency_level: ProficiencyLevel | None = None
     years: float | None = None
 
 
@@ -67,7 +69,7 @@ class SkillOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     name: str
-    proficiency_level: str | None = None
+    proficiency_level: ProficiencyLevel | None = None
     years: float | None = None
 
 
