@@ -95,10 +95,28 @@ async def test_persist_confirmed_materializes_children_and_parses_dates(
     assert profile.github_url == "https://github.com/kinpa07"
     assert profile.skills[0].category == "Languages"
     assert profile.experiences[0].start_date == date(2025, 11, 1)  # free-text → real date
+    assert profile.experiences[0].is_current is False  # finished role, real end date
     assert profile.educations[0].end_date == date(2026, 1, 1)
     assert [p.name for p in profile.projects] == ["OrderFlow"]
     assert [c.name for c in profile.certifications] == ["AWS SAA"]
     assert [lang.level for lang in profile.languages] == ["C1"]
+
+
+async def test_persist_confirmed_marks_ongoing_role_current(db_session: AsyncSession) -> None:
+    repo = UserProfileRepository(db_session)
+    await repo.create_draft(UserProfile(draft_data={"raw": "x"}))
+    draft = await repo.get_draft()
+    assert draft is not None
+
+    request = _confirm_request()
+    request.experiences[0].end_date = "Present"  # ongoing role
+    await persist_confirmed(repo, _keyword_llm(["x"]), draft, request)
+    profile = await repo.get_confirmed()
+    assert profile is not None
+
+    # "Present" → ongoing: flagged current, no end date — never rendered as a finished role.
+    assert profile.experiences[0].is_current is True
+    assert profile.experiences[0].end_date is None
 
 
 async def test_persist_confirmed_replaces_prior_confirmed(db_session: AsyncSession) -> None:

@@ -124,6 +124,7 @@ class ExperienceOut(BaseModel):
     location: str | None = None
     start_date: date | None = None
     end_date: date | None = None
+    is_current: bool = False
     bullets: list[str] = []
     tech_stack: list[str] = []
 
@@ -137,6 +138,7 @@ class EducationOut(BaseModel):
     location: str | None = None
     start_date: date | None = None
     end_date: date | None = None
+    is_current: bool = False
 
 
 class ProjectOut(BaseModel):

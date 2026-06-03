@@ -82,6 +82,10 @@ class Experience(Base):
     location: Mapped[str | None] = mapped_column(String(255))
     start_date: Mapped[date | None]
     end_date: Mapped[date | None]
+    # True when the CV marks the role ongoing ("Present"). Distinguishes "still here"
+    # (is_current=True, end_date NULL) from "finished but end date missing/unparseable"
+    # (is_current=False, end_date NULL) — so re-rendering never shows a past job as current.
+    is_current: Mapped[bool] = mapped_column(default=False)
     bullets: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     tech_stack: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
@@ -98,9 +102,11 @@ class Education(Base):
     field: Mapped[str | None] = mapped_column(String(255))
     location: Mapped[str | None] = mapped_column(String(255))
     # Date range like Experience so the rendered CV can show "2021 - 2026" (or "- Present"
-    # when end_date is NULL); a bare graduation year couldn't reproduce that.
+    # when ongoing); a bare graduation year couldn't reproduce that.
     start_date: Mapped[date | None]
     end_date: Mapped[date | None]
+    # In-progress degree marked "Present"; same semantics as Experience.is_current.
+    is_current: Mapped[bool] = mapped_column(default=False)
 
     profile: Mapped["UserProfile"] = relationship(back_populates="educations")
 

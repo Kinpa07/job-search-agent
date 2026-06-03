@@ -58,6 +58,20 @@ def parse_cv_date(value: str | None) -> date | None:
         return None
 
 
+# End-date strings the LLM (or a human in review) uses to mark an entry ongoing.
+_CURRENT_SENTINELS = {"present", "current", "ongoing"}
+
+
+def split_end_date(value: str | None) -> tuple[date | None, bool]:
+    """Map a CV end-date string to (end_date, is_current). An ongoing marker ("Present")
+    becomes is_current=True with no date; anything else parses normally with is_current=False.
+    This keeps "still here" distinct from "finished but end date missing/unparseable" (both
+    end_date=None) so re-rendering never shows a past role as current."""
+    if value and value.strip().lower() in _CURRENT_SENTINELS:
+        return None, True
+    return parse_cv_date(value), False
+
+
 def _build_skills(items: list[SkillIn]) -> list[Skill]:
     return [
         Skill(
@@ -71,32 +85,40 @@ def _build_skills(items: list[SkillIn]) -> list[Skill]:
 
 
 def _build_experiences(items: list[ExperienceIn]) -> list[Experience]:
-    return [
-        Experience(
-            company=e.company,
-            title=e.title,
-            location=e.location,
-            start_date=parse_cv_date(e.start_date),
-            end_date=parse_cv_date(e.end_date),
-            bullets=[b for b in e.bullets if b.strip()],
-            tech_stack=[t for t in e.tech_stack if t.strip()],
+    experiences = []
+    for e in items:
+        end_date, is_current = split_end_date(e.end_date)
+        experiences.append(
+            Experience(
+                company=e.company,
+                title=e.title,
+                location=e.location,
+                start_date=parse_cv_date(e.start_date),
+                end_date=end_date,
+                is_current=is_current,
+                bullets=[b for b in e.bullets if b.strip()],
+                tech_stack=[t for t in e.tech_stack if t.strip()],
+            )
         )
-        for e in items
-    ]
+    return experiences
 
 
 def _build_educations(items: list[EducationIn]) -> list[Education]:
-    return [
-        Education(
-            institution=e.institution,
-            degree=e.degree,
-            field=e.field,
-            location=e.location,
-            start_date=parse_cv_date(e.start_date),
-            end_date=parse_cv_date(e.end_date),
+    educations = []
+    for e in items:
+        end_date, is_current = split_end_date(e.end_date)
+        educations.append(
+            Education(
+                institution=e.institution,
+                degree=e.degree,
+                field=e.field,
+                location=e.location,
+                start_date=parse_cv_date(e.start_date),
+                end_date=end_date,
+                is_current=is_current,
+            )
         )
-        for e in items
-    ]
+    return educations
 
 
 def _build_projects(items: list[ProjectIn]) -> list[Project]:
