@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     langchain_tracing_v2: bool = False
     langchain_api_key: str = ""
     langchain_project: str = "job-search-agent"
+    # Data region endpoint — US by default; EU workspaces must set this to
+    # https://eu.api.smith.langchain.com or ingestion 403s.
+    langchain_endpoint: str = "https://api.smith.langchain.com"
 
     # Source slug registries (Module 1)
     greenhouse_slugs: dict[str, str] = {
@@ -101,3 +104,4 @@ if settings.langchain_tracing_v2 and settings.langchain_api_key:
     os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
     os.environ.setdefault("LANGCHAIN_API_KEY", settings.langchain_api_key)
     os.environ.setdefault("LANGCHAIN_PROJECT", settings.langchain_project)
+    os.environ.setdefault("LANGCHAIN_ENDPOINT", settings.langchain_endpoint)
