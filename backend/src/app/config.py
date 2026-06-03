@@ -99,7 +99,7 @@ settings = Settings()
 
 # LangChain/LangGraph auto-tracing reads os.environ, not this Settings object.
 # Propagate the LangSmith config so tracing works when running locally from .env.
-# (In Docker/Railway these are passed as real env vars and this is a no-op.)
+# (In Docker these are passed as real env vars and this is a no-op.)
 if settings.langchain_tracing_v2 and settings.langchain_api_key:
     os.environ.setdefault("LANGCHAIN_TRACING_V2", "true")
     os.environ.setdefault("LANGCHAIN_API_KEY", settings.langchain_api_key)

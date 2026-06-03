@@ -28,6 +28,9 @@ CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".llm_cache"
 
 
 def _cache_key(tool: type[BaseModel], messages: list[BaseMessage]) -> str:
+    # NOTE: keyed on the single configured model. Module 3.5 wires different injected
+    # models to different nodes; when that lands, key on the injected llm's id instead,
+    # or two distinct models would share (and clobber) a cache entry here.
     payload = json.dumps(
         {
             "model": settings.anthropic_model,
