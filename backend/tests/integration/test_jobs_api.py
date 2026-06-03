@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters import arbeitnow, ashby, devbg, greenhouse, lever, remotive
 from app.adapters.base import JobFilters, RawJob
+from app.models.profile import UserProfile
 from app.repositories.job import JobRepository
 
 pytestmark = pytest.mark.integration
@@ -133,7 +134,8 @@ async def test_poll_runs_synchronously_and_records_status(
     monkeypatch.setattr(lever.LeverAdapter, "fetch_jobs", empty)
     monkeypatch.setattr(ashby.AshbyAdapter, "fetch_jobs", empty)
 
-    response = await api_client.post("/api/v1/jobs/poll")
+    # Explicit keywords override → runs synchronously without a seeded profile.
+    response = await api_client.post("/api/v1/jobs/poll", json=["developer"])
     assert response.status_code == 200
     body = response.json()
     assert body["completed_at"] is not None
@@ -147,3 +149,50 @@ async def test_poll_runs_synchronously_and_records_status(
     # And the run was recorded so /poll/status reflects it.
     status = (await api_client.get("/api/v1/jobs/poll/status")).json()
     assert status["counts"]["arbeitnow"]["new_count"] == 1
+
+
+async def test_poll_no_body_skips_without_confirmed_profile(api_client: AsyncClient) -> None:
+    # No keywords in the body and no confirmed profile → skip, not an unfiltered poll.
+    response = await api_client.post("/api/v1/jobs/poll")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["completed_at"] is None
+    assert body["counts"] == {}
+
+
+async def test_poll_no_body_uses_confirmed_profile_keywords(
+    api_client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db_session.add(
+        UserProfile(
+            name="Vesko",
+            email="v@example.com",
+            status="confirmed",
+            search_keywords=["python"],
+        )
+    )
+    await db_session.commit()
+
+    captured: list[JobFilters] = []
+
+    async def capture(self: Any, filters: JobFilters) -> list[RawJob]:
+        captured.append(filters)
+        return []
+
+    for adapter in (
+        arbeitnow.ArbeitNowAdapter,
+        remotive.RemotiveAdapter,
+        devbg.DevBgAdapter,
+        greenhouse.GreenhouseAdapter,
+        lever.LeverAdapter,
+        ashby.AshbyAdapter,
+    ):
+        monkeypatch.setattr(adapter, "fetch_jobs", capture)
+
+    response = await api_client.post("/api/v1/jobs/poll")
+    assert response.status_code == 200
+    # The poll ran with the confirmed profile's keywords, not an empty (unfiltered) filter.
+    assert captured
+    assert captured[0].keywords == ["python"]
