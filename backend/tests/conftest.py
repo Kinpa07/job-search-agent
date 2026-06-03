@@ -1,3 +1,13 @@
+import os
+
+# Disable LangSmith tracing for the whole test session, BEFORE importing the app (which
+# propagates the LANGCHAIN_* env vars via os.environ.setdefault on import). The test fakes
+# are still BaseChatModels, so LangChain would otherwise trace every fake invocation —
+# flooding the LangSmith project and burning the monthly trace quota on runs that never
+# touch a real model. Setting these first makes the app's setdefault a no-op.
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGSMITH_TRACING"] = "false"
+
 from collections.abc import AsyncGenerator
 
 import pytest
