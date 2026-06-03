@@ -4,19 +4,8 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import structlog
 
-from app.adapters.base import JobFilters, RawJob, title_allowed
-
-COMPANY_SLUGS = {
-    "trading212": "Trading212",
-    "elevenlabs": "ElevenLabs",
-    "searchapi": "SearchApi",
-    "n8n": "n8n",
-    "Redis": "Redis",
-    "lucidlink": "LucidLink",
-    "p2p.org": "P2P.org",
-    "duvo": "Duvo",
-}
-
+from app.adapters.base import JobFilters, RawJob, keyword_matches, title_allowed
+from app.config import settings
 
 logger = structlog.get_logger()
 
@@ -25,7 +14,7 @@ class AshbyAdapter:
     async def fetch_jobs(self, filters: JobFilters) -> list[RawJob]:
         result = []
         async with httpx.AsyncClient(timeout=60.0) as client:
-            for slug, company_name in COMPANY_SLUGS.items():
+            for slug, company_name in settings.ashby_slugs.items():
                 try:
                     response = await client.get(
                         f"https://api.ashbyhq.com/posting-api/job-board/{slug}"
@@ -40,11 +29,10 @@ class AshbyAdapter:
                     ]
 
                     if filters.keywords:
-                        keywords = [keyword.lower() for keyword in filters.keywords]
                         filtered = [
                             job
                             for job in filtered
-                            if any(keyword in job["title"].lower() for keyword in keywords)
+                            if keyword_matches(job["title"], filters.keywords)
                         ]
 
                     if filters.location:

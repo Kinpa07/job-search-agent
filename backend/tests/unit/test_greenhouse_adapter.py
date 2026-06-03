@@ -29,7 +29,7 @@ def _job(
 
 @pytest.fixture(autouse=True)
 def single_slug(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.adapters.greenhouse.COMPANY_SLUGS", {"testco": "Test Co"})
+    monkeypatch.setattr("app.config.settings.greenhouse_slugs", {"testco": "Test Co"})
 
 
 async def test_maps_fields_and_strips_html_description(patch_httpx: PatchHttpx) -> None:
@@ -59,7 +59,7 @@ async def test_unavailable_slug_does_not_abort_other_slugs(
     patch_httpx: PatchHttpx, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        "app.adapters.greenhouse.COMPANY_SLUGS",
+        "app.config.settings.greenhouse_slugs",
         {"dead": "Dead Co", "live": "Live Co"},
     )
 

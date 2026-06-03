@@ -4,19 +4,8 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import structlog
 
-from app.adapters.base import JobFilters, RawJob, title_allowed
-
-COMPANY_SLUGS = {
-    "Fliff": "Fliff",
-    "capital": "Capital.com",
-    "crypto": "Crypto.com",
-    "binance": "Binance",
-    "OpenPayd": "OpenPayd",
-    "doola": "doola",
-    "remofirst": "RemoFirst",
-    "pipedrive": "Pipedrive",
-}
-
+from app.adapters.base import JobFilters, RawJob, keyword_matches, title_allowed
+from app.config import settings
 
 logger = structlog.get_logger()
 
@@ -25,7 +14,7 @@ class LeverAdapter:
     async def fetch_jobs(self, filters: JobFilters) -> list[RawJob]:
         result = []
         async with httpx.AsyncClient() as client:
-            for slug, company_name in COMPANY_SLUGS.items():
+            for slug, company_name in settings.lever_slugs.items():
                 try:
                     response = await client.get(
                         f"https://api.lever.co/v0/postings/{slug}?mode=json"
@@ -40,11 +29,10 @@ class LeverAdapter:
                     ]
 
                     if filters.keywords:
-                        keywords = [keyword.lower() for keyword in filters.keywords]
                         filtered = [
                             job
                             for job in filtered
-                            if any(keyword in job["text"].lower() for keyword in keywords)
+                            if keyword_matches(job["text"], filters.keywords)
                         ]
 
                     if filters.location:

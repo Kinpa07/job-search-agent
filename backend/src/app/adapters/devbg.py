@@ -5,7 +5,7 @@ import httpx
 import structlog
 from bs4 import BeautifulSoup, Tag
 
-from app.adapters.base import JobFilters, RawJob, title_allowed
+from app.adapters.base import JobFilters, RawJob, keyword_matches, title_allowed
 
 logger = structlog.get_logger()
 
@@ -49,15 +49,14 @@ class DevBgAdapter:
                     filtered: list[Tag] = list(cards)
 
                     if filters.keywords:
-                        keywords = [kw.lower() for kw in filters.keywords]
                         prev = filtered
                         filtered = []
                         for card in prev:
                             title_el = card.select_one("h6.job-title")
                             if not title_el:
                                 continue
-                            title = title_el.get_text(strip=True).lower()
-                            if any(keyword in title for keyword in keywords):
+                            title = title_el.get_text(strip=True)
+                            if keyword_matches(title, filters.keywords):
                                 filtered.append(card)
 
                     if filters.posted_within_days > 0:

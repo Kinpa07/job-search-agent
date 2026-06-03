@@ -28,7 +28,7 @@ def _job(
 
 @pytest.fixture(autouse=True)
 def single_slug(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.adapters.ashby.COMPANY_SLUGS", {"testco": "Test Co"})
+    monkeypatch.setattr("app.config.settings.ashby_slugs", {"testco": "Test Co"})
 
 
 @pytest.fixture(autouse=True)

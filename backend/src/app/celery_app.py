@@ -16,10 +16,9 @@ celery_app.conf.update(
 
 celery_app.autodiscover_tasks(["app.tasks"])
 
-# Interval must stay >= 30s to stay under Upstash's 10K-commands/day free tier.
 celery_app.conf.beat_schedule = {
-    "poll-all-sources-every-6h": {
+    "poll-all-sources": {
         "task": "app.tasks.poll_all_sources",
-        "schedule": 6 * 60 * 60,
+        "schedule": settings.poll_interval_seconds,
     },
 }

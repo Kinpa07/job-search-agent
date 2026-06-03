@@ -2,13 +2,17 @@ import asyncio
 
 import httpx
 import redis.asyncio as aioredis
+import structlog
 
 from app.adapters.base import JobFilters
 from app.celery_app import celery_app
 from app.config import settings
 from app.database import async_session_factory
 from app.repositories.job import JobRepository
+from app.repositories.profile import UserProfileRepository
 from app.services.polling import record_poll_status, run_poll
+
+logger = structlog.get_logger()
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
@@ -23,8 +27,15 @@ def poll_jobs() -> dict[str, int]:
 
 async def _poll_jobs() -> dict[str, int]:
     async with async_session_factory() as session:
+        profile = await UserProfileRepository(session).get_confirmed()
+        if profile is None:
+            # The pipeline is profile-driven: with no confirmed profile there are no
+            # search keywords, and polling unfiltered would flood the DB with noise.
+            logger.info("poll.skipped", reason="no confirmed profile")
+            return {}
+
         repo = JobRepository(session)
-        result = await run_poll(repo, JobFilters())
+        result = await run_poll(repo, JobFilters(keywords=profile.search_keywords))
 
     async with aioredis.Redis.from_url(settings.redis_url, decode_responses=True) as redis:
         await record_poll_status(redis, result)
