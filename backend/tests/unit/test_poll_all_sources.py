@@ -8,7 +8,9 @@ import pytest
 import app.tasks.poll_all_sources as task_module
 from app.adapters import arbeitnow, ashby, devbg, greenhouse, lever, remotive
 from app.adapters.base import JobFilters, RawJob
+from app.models.profile import UserProfile
 from app.repositories.job import JobRepository
+from app.repositories.profile import UserProfileRepository
 from app.tasks.poll_all_sources import _poll_jobs
 
 
@@ -33,6 +35,13 @@ def mock_session_factory(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
+def mock_confirmed_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The poll loads the confirmed profile's keywords; give it one so it proceeds."""
+    profile = UserProfile(status="confirmed", search_keywords=["Backend Engineer"])
+    monkeypatch.setattr(UserProfileRepository, "get_confirmed", AsyncMock(return_value=profile))
+
+
+@pytest.fixture
 def mock_redis(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     redis = AsyncMock()
     mock_ctx = AsyncMock()
@@ -47,6 +56,7 @@ def mock_redis(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
 async def test_poll_all_sources_returns_counts_and_writes_redis(
     monkeypatch: pytest.MonkeyPatch,
     mock_session_factory: None,
+    mock_confirmed_profile: None,
     mock_redis: AsyncMock,
 ) -> None:
     async def one(self: Any, filters: JobFilters) -> list[RawJob]:
@@ -87,6 +97,7 @@ async def test_poll_all_sources_returns_counts_and_writes_redis(
 async def test_poll_reraises_network_error_after_recording_status(
     monkeypatch: pytest.MonkeyPatch,
     mock_session_factory: None,
+    mock_confirmed_profile: None,
     mock_redis: AsyncMock,
 ) -> None:
     async def boom(self: Any, filters: JobFilters) -> list[RawJob]:
@@ -118,3 +129,17 @@ async def test_poll_reraises_network_error_after_recording_status(
     assert "arbeitnow" in payload["errors"]
     assert payload["counts"]["remotive"]["new_count"] == 0
     assert "arbeitnow" not in payload["counts"]
+
+
+async def test_poll_skips_when_no_confirmed_profile(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_session_factory: None,
+    mock_redis: AsyncMock,
+) -> None:
+    monkeypatch.setattr(UserProfileRepository, "get_confirmed", AsyncMock(return_value=None))
+
+    result = await _poll_jobs()
+
+    # No profile → no keywords → the poll is a no-op (no sources hit, no status written).
+    assert result == {}
+    mock_redis.set.assert_not_called()
