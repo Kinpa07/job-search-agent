@@ -37,7 +37,7 @@ async def upload_cv(
 
     graph = build_graph(llm)
     try:
-        result = graph.invoke(CVParserState(pdf_bytes=pdf_bytes))
+        result = await graph.ainvoke(CVParserState(pdf_bytes=pdf_bytes))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

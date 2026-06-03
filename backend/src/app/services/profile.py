@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date, datetime
 
 import structlog
@@ -34,7 +35,6 @@ FIELDS_TRIGGERING_KEYWORD_EXTRACTION = {
     "summary",
     "skills",
     "experiences",
-    "educations",
     "projects",
 }
 FIELDS_REQUIRING_WHOLESALE_REPLACEMENT = {
@@ -159,10 +159,15 @@ async def persist_confirmed(
     draft.projects = _build_projects(data.projects)
     draft.certifications = _build_certifications(data.certifications)
     draft.languages = _build_languages(data.languages)
+    # Extract keywords from the built profile BEFORE staging any DB writes, so the LLM
+    # round-trip never sits between the staged DELETE and COMMIT holding row locks. Fails
+    # closed: a keyword failure aborts the confirm before any mutation, so we never persist
+    # a confirmed profile with empty keywords (which would make the poll task run unfiltered).
+    keywords = await asyncio.to_thread(extract_keywords, draft, llm)
     await repo.delete_by_status("confirmed")  # Enforce single confirmed profile invariant
     draft.status = "confirmed"
     draft.draft_data = None  # Clear draft data to save space; it's no longer needed
-    draft.search_keywords = extract_keywords(draft, llm)
+    draft.search_keywords = keywords
     await repo.save(draft)
     logger.info("profile.confirmed", profile_id=draft.id, keywords_count=len(draft.search_keywords))
     return draft
@@ -194,7 +199,7 @@ async def update_profile(
         confirmed.languages = _build_languages(data.languages)
 
     if any(field in fields for field in FIELDS_TRIGGERING_KEYWORD_EXTRACTION):
-        confirmed.search_keywords = extract_keywords(confirmed, llm)
+        confirmed.search_keywords = await asyncio.to_thread(extract_keywords, confirmed, llm)
     await repo.save(confirmed)
     logger.info("profile.updated", profile_id=confirmed.id, updated_fields=list(fields.keys()))
     return confirmed
