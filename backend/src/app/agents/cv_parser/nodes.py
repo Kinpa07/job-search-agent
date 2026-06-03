@@ -45,20 +45,20 @@ def _profile_links(doc: Any) -> tuple[str | None, str | None]:
 
 
 def extract_text(state: CVParserState) -> CVParserState:
-    doc = fitz.open(stream=state.pdf_bytes, filetype="pdf")
-    pages = [cast(str, page.get_text("text")) for page in doc]
-    # Repair mojibake from PDF glyph mis-decoding (â€" → —, DALLÂ·E → DALL·E) before the
-    # LLM sees the text, so "copy verbatim" stays honest and every field comes out clean.
-    text = ftfy.fix_text("\n".join(pages)).strip()
+    with fitz.open(stream=state.pdf_bytes, filetype="pdf") as doc:
+        pages = [cast(str, page.get_text("text")) for page in doc]
+        # Repair mojibake from PDF glyph mis-decoding (â€" → —, DALLÂ·E → DALL·E) before the
+        # LLM sees the text, so "copy verbatim" stays honest and every field comes out clean.
+        text = ftfy.fix_text("\n".join(pages)).strip()
 
-    if len(text) < MIN_TEXT_LENGTH:
-        raise ValueError(
-            f"Extracted text too short ({len(text)} chars) — "
-            "PDF may be scanned or image-based. "
-            "Export your CV from a word processor that embeds a text layer."
-        )
+        if len(text) < MIN_TEXT_LENGTH:
+            raise ValueError(
+                f"Extracted text too short ({len(text)} chars) — "
+                "PDF may be scanned or image-based. "
+                "Export your CV from a word processor that embeds a text layer."
+            )
 
-    state.github_url, state.linkedin_url = _profile_links(doc)
+        state.github_url, state.linkedin_url = _profile_links(doc)
     logger.info(
         "cv.extract_text.done",
         char_count=len(text),
