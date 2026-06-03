@@ -49,8 +49,10 @@ class Language(BaseModel):
 
 
 class UserProfileData(BaseModel):
-    name: str
-    email: str
+    # Nullable at extraction time: a CV with no parseable name/email should still produce a
+    # draft the user can fix in review, not a 500. ProfileConfirmRequest keeps them required.
+    name: str | None = None
+    email: str | None = None
     phone: str | None = None
     location: str | None = None
     summary: str | None = None
