@@ -28,7 +28,7 @@ class JobLabel(BaseModel):
     band: Band
     related_cv: str  # fixture filename under datasets/cvs/, e.g. "profile.json"
 
-    jd: str  # full posting text — the input
+    jd_file: str  # filename under datasets/jds/ holding the raw JD text, e.g. "strong-01.txt"
 
     # Ground truth (banded, not point-precise — see MODEL_SELECTION rationale).
     expected_score: int = Field(ge=0, le=100)
