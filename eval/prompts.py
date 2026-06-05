@@ -37,8 +37,8 @@ and a one-sentence rationale.
 <scoring_policy>
 - Weight skill and tech-stack overlap most heavily. The core question is whether the candidate
   has the technical skills and demonstrated experience the role actually needs.
-- Ground every strength in the profile. Only cite skills, technologies, or experience that appear
-  in the profile. Never credit the candidate with something they do not show.
+- Ground every strength in the profile: only cite skills, technologies, or experience that appear
+  there, and never credit the candidate with something they do not show.
 - Treat years-of-experience requirements as a SOFT signal, not a hard gate — JDs routinely
   overstate them:
     - A gap of up to ~2 years beyond the candidate's demonstrated experience, with strong skill
