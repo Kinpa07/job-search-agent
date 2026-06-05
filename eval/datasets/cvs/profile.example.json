@@ -1,0 +1,55 @@
+{
+  "name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "phone": "+1 555 0100",
+  "location": "Remote",
+  "github_url": "https://github.com/example",
+  "linkedin_url": "https://www.linkedin.com/in/example/",
+  "portfolio_url": null,
+  "summary": "Full-stack engineer with experience building Python and TypeScript web applications.",
+  "search_keywords": ["Software Engineer", "Python", "TypeScript", "React", "FastAPI", "PostgreSQL"],
+  "skills": [
+    {"name": "Python", "proficiency_level": "proficient", "years": null, "category": "Languages"},
+    {"name": "TypeScript", "proficiency_level": "proficient", "years": null, "category": "Languages"},
+    {"name": "React", "proficiency_level": "proficient", "years": null, "category": "Frameworks & Libraries"},
+    {"name": "FastAPI", "proficiency_level": "proficient", "years": null, "category": "Frameworks & Libraries"},
+    {"name": "PostgreSQL", "proficiency_level": "proficient", "years": null, "category": "Cloud & Infrastructure"}
+  ],
+  "experiences": [
+    {
+      "company": "Example Corp",
+      "title": "Software Engineer",
+      "location": "Remote",
+      "start_date": "2023-01-01",
+      "end_date": null,
+      "is_current": true,
+      "bullets": [
+        "Built and shipped REST APIs in Python/FastAPI backed by PostgreSQL.",
+        "Developed React front-end features in TypeScript with unit and integration tests."
+      ],
+      "tech_stack": ["Python", "FastAPI", "React", "PostgreSQL"]
+    }
+  ],
+  "educations": [
+    {
+      "institution": "Example University",
+      "degree": "Bachelor",
+      "field": "Computer Science",
+      "location": "Remote",
+      "start_date": "2019-09-01",
+      "end_date": "2023-06-01",
+      "is_current": false
+    }
+  ],
+  "projects": [
+    {
+      "name": "Sample Project",
+      "bullets": ["A demo full-stack application built for learning."],
+      "tech_stack": ["Python", "React"],
+      "url": null,
+      "year": 2023
+    }
+  ],
+  "certifications": [],
+  "languages": [{"name": "English", "level": "Native"}]
+}
