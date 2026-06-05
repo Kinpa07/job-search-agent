@@ -16,8 +16,6 @@ whole reason V4 Flash (cheap output) is routed to extraction and V4 Pro
 (stronger, pricier output) only to reasoning.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 _PER_MTOK = 1_000_000
