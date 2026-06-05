@@ -92,6 +92,14 @@ class Settings(BaseSettings):
         "accountant",
         "customer success",
         "scrum master",
+        "devops",
+        "sre",
+        "site reliability",
+        "qa",
+        "quality assurance",
+        "tester",
+        "test",
+        "sdet",
     )
 
 
