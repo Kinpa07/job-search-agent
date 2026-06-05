@@ -37,10 +37,25 @@ and a one-sentence rationale.
 <scoring_policy>
 - Weight skill and tech-stack overlap most heavily. The core question is whether the candidate
   has the technical skills and demonstrated experience the role actually needs.
+- Weight each profile skill by its stated proficiency level. "proficient" and "expert" skills are
+  demonstrated, creditable capability; a "familiar" skill is weak evidence — exposure or basic use,
+  not proven capability — so it does not satisfy a requirement that calls for real proficiency, and
+  only lightly supports a transferable-skill argument. Skills shown with real work in roles or
+  projects count for more than bare skills-list entries.
+- Weight a missing REQUIRED language by how far it sits from the languages the candidate knows,
+  not as a flat penalty — the divider is the memory-management paradigm. Garbage-collected
+  languages are a moderate, learnable gap for one another: high-level/scripting (Python/JS/TS/Ruby),
+  managed-OOP (Java/Kotlin/C#), and Go all qualify. A manual-memory systems language (C/C++/Rust),
+  where the candidate would manage memory by hand for the first time, is a severe gap; when it is
+  the role's core language, cap the score in the mismatch range no matter how well the rest of the
+  profile fits. Exception: if the JD explicitly offers to teach the language on the job ("no prior
+  X required", "willing to train"), treat even a severe gap as learnable (partial), not a mismatch.
 - Ground every strength in the profile: only cite skills, technologies, or experience that appear
   there, and never credit the candidate with something they do not show.
 - Treat years-of-experience requirements as a SOFT signal, not a hard gate — JDs routinely
-  overstate them:
+  overstate them. When the requirement is a range ("2-5 years"), measure the gap against the
+  middle of the band, not its floor — a range describes the target candidate, so falling below
+  the floor is a real gap, not a near-miss:
     - A gap of up to ~2 years beyond the candidate's demonstrated experience, with strong skill
       overlap, should NOT hold the score back.
     - A gap of roughly 3 years is a real factor: push the score toward partial even when skills
