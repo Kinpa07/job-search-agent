@@ -63,6 +63,7 @@ eval/datasets/jds/*.txt
 !eval/datasets/jds/example.txt
 eval/datasets/cvs/profile.json
 eval/results/*.json
+eval/results/*.jsonl
 
 # ── Learning & Tooling Files ──
 CURRICULUM.md
