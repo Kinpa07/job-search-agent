@@ -34,7 +34,9 @@ def main() -> int:
         try:
             job = JobLabel.model_validate(row)
         except ValidationError as e:
-            errors.append(f"line {i} ({row.get('id', '?')}): schema — {e.errors()[0]['msg']}")
+            errors.append(
+                f"line {i} ({row.get('id', '?')}): schema — {e.errors()[0]['msg']}"
+            )
             continue
 
         if job.id in seen_ids:
@@ -60,8 +62,8 @@ def main() -> int:
             print(f"  · {u}")
     if errors:
         print(f"\n{len(errors)} ERRORS:")
-        for e in errors:
-            print(f"  ✗ {e}")
+        for err in errors:
+            print(f"  ✗ {err}")
         return 1
     print("\nNo errors — every record is well-formed.")
     return 0
