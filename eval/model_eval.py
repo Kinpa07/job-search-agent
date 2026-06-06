@@ -6,10 +6,10 @@ from typing import Any
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 
-from models import build_model
+from models import MODEL_REGISTRY, build_model
 from pricing import cost_usd
 from prompts import EXTRACT_REQUIREMENTS_PROMPT, SCORE_MATCH_PROMPT, TAILOR_CV_PROMPT
-from schemas import JobLabel, RequirementsExtraction, MatchScore, RunRecord, TailoredCV
+from schemas import JobLabel, MatchScore, RequirementsExtraction, RunRecord, TailoredCV
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -51,9 +51,9 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
 }
 
 ASSIGNMENT_LIST = [
-    ("extract_requirements", "deepseek-v4-flash"),
-    ("score_match", "deepseek-v4-pro"),
-    ("tailor_cv", "deepseek-v4-pro"),
+    ("extract_requirements", "flash-nothink"),
+    ("score_match", "pro-think"),
+    ("tailor_cv", "pro-think"),
 ]
 
 
@@ -110,8 +110,9 @@ def run_once(
     input_tokens = usage.get("input_tokens", 0)
     output_tokens = usage.get("output_tokens", 0)
     cached_input_tokens = (usage.get("input_token_details") or {}).get("cache_read", 0)
+    # Pricing is per model tier, so key cost on the spec's model_name, not the config label.
     cost = cost_usd(
-        model,
+        MODEL_REGISTRY[model].model_name,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         cached_input_tokens=cached_input_tokens,
