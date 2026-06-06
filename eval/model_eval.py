@@ -9,7 +9,14 @@ from pydantic import BaseModel, ValidationError
 from models import MODEL_REGISTRY, build_model
 from pricing import cost_usd
 from prompts import EXTRACT_REQUIREMENTS_PROMPT, SCORE_MATCH_PROMPT, TAILOR_CV_PROMPT
-from schemas import JobLabel, MatchScore, RequirementsExtraction, RunRecord, TailoredCV
+from schemas import (
+    TAILOR_MIN_SCORE,
+    JobLabel,
+    MatchScore,
+    RequirementsExtraction,
+    RunRecord,
+    TailoredCV,
+)
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -160,6 +167,10 @@ def run_eval() -> None:
         for task, model in ASSIGNMENT_LIST:
             llm = build_model(model)
             for job in jobs:
+                # Tailoring only runs on >=60 jobs (matches production + the metrics filter);
+                # tailoring a mismatch is a non-scenario that just burns calls.
+                if task == "tailor_cv" and job.expected_score < TAILOR_MIN_SCORE:
+                    continue
                 for repeat in range(3):
                     record = run_once(llm, model, task, job, profile, repeat)
                     f.write(record.model_dump_json() + "\n")

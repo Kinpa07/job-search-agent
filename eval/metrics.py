@@ -17,7 +17,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from schemas import JobLabel, RunRecord
+from schemas import TAILOR_MIN_SCORE, JobLabel, RunRecord
 
 HERE = Path(__file__).parent
 RESULTS = HERE / "results"
@@ -25,6 +25,9 @@ JOBS = HERE / "datasets" / "jobs.jsonl"
 
 THRESHOLD = 70  # the >=70 action boundary that triggers tailoring
 SCORE_TASK = "score_match"  # the only task graded against expected_score
+TAILOR_TASK = (
+    "tailor_cv"  # TAILOR_MIN_SCORE (the >=60 eval boundary) lives in schemas.py
+)
 
 
 def load_records(path: Path) -> list[RunRecord]:
@@ -136,6 +139,8 @@ def main() -> int:
     print(f"Results: {path.name}  ({len(records)} runs)\n")
     for model, task in sorted(groups):
         group = groups[(model, task)]
+        if task == TAILOR_TASK:
+            group = [r for r in group if expected.get(r.job_id, 0) >= TAILOR_MIN_SCORE]
         runs, validity, median_cost, p50 = general_metrics(group)
         print(f"{task} · {model}")
         print(

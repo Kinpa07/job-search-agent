@@ -20,6 +20,11 @@ from pydantic import BaseModel, Field
 # though the coverage target is a coarser 5 strong-ish / 5 partial / 5 mismatch.
 Band = Literal["strong", "good", "partial", "mismatch"]
 
+# Tailoring is only evaluated on jobs at or above this expected_score. Production tailors
+# auto at >=70 and via manual override on borderline ~60s, never deep mismatches — so both
+# the run (model_eval) and the report (metrics) skip tailoring below this line. Single source.
+TAILOR_MIN_SCORE = 60
+
 
 class JobLabel(BaseModel):
     """One line of datasets/jobs.jsonl — a job plus the answers you'd accept."""
