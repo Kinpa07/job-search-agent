@@ -73,7 +73,11 @@ def run_once(
     else:
         content = f"Job description:\n{jd}"
 
-    bound = llm.bind_tools([task_spec.schema], tool_choice=task_spec.schema.__name__)
+    # tool_choice="auto", not a forced choice: DeepSeek thinking mode (V4 Pro) rejects
+    # forced tool_choice ("required" or a specific tool name both 400). With one tool bound
+    # and a directive prompt the model still calls it; a decline is recorded as a no-tool-call
+    # failure (output=None) rather than crashing, and shows up in the validity rate.
+    bound = llm.bind_tools([task_spec.schema], tool_choice="auto")
     messages = [
         SystemMessage(content=task_spec.prompt),
         HumanMessage(content=content),
