@@ -56,6 +56,15 @@ Thumbs.db
 # ── Chrome Extension Build ──
 extension/dist/
 
+# ── Eval dataset (user-owned: copyrighted JD text + profile PII) ──
+# Real labeled data stays local; only *.example.* fixtures are committed.
+eval/datasets/jobs.jsonl
+eval/datasets/jds/*.txt
+!eval/datasets/jds/example.txt
+eval/datasets/cvs/profile.json
+eval/results/*.json
+eval/results/*.jsonl
+
 # ── Learning & Tooling Files ──
 CURRICULUM.md
 THEORY_PROMPT.md

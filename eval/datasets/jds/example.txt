@@ -1,0 +1,19 @@
+Backend Engineer
+Example Corp
+
+About the role
+We're hiring a backend engineer to build and maintain our API platform. You'll
+work in a small team shipping features end to end, from design through to
+deployment and monitoring.
+
+Requirements
+- 1-2 years of professional software development experience.
+- Proficiency in Python (FastAPI or Django) or another modern backend language.
+- Experience designing and consuming REST APIs.
+- Working knowledge of a relational database (PostgreSQL or MySQL).
+- Comfortable with Git and writing unit/integration tests.
+
+Nice to have
+- Docker and CI/CD experience.
+- Exposure to cloud platforms (AWS/GCP).
+- Familiarity with Redis or other caching layers.
